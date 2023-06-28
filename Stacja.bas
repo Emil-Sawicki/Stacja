@@ -12,19 +12,19 @@ DO: _LIMIT 500 'tytul_obsluga
         koordynaty_kursora wiersz, kolumna
         tytul_menu wiersz, kolumna 'rysowanie menu z podswietlaniem wskazanej opcji
         'zdarzenia myszy
-        IF wiersz = 17 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN tytul_menu_nowagra 'submenu "Nowa gra"
+        IF wiersz = 17 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN tytul_menu_nowagra tymczasowa_kolumna 'submenu "Nowa gra"
         'IF wiersz = 19 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN tytul_menu_wczytaj
-        IF wiersz = 21 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN tytul_menu_edytor
-        IF wiersz = 23 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN SYSTEM
+        IF wiersz = 21 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN tytul_menu_edytor tymczasowa_kolumna
+        IF wiersz = 23 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) AND kolumna <> tymczasowa_kolumna THEN SYSTEM
     LOOP WHILE _MOUSEINPUT
     'zdarzenia klawiatury
-    IF klawisz$ = "N" THEN tytul_menu_nowagra
+    IF klawisz$ = "N" THEN tytul_menu_nowagra tymczasowa_kolumna
     'IF klawisz$ = "W" THEN tytul_menu_wczytaj
-    IF klawisz$ = "E" THEN tytul_menu_edytor
+    IF klawisz$ = "E" THEN tytul_menu_edytor tymczasowa_kolumna
     IF klawisz$ = "K" OR klawisz$ = CHR$(27) THEN SYSTEM
 LOOP
 
-SUB tytul_menu_nowagra 'ekran tytulowy - submenu "Nowa gra"
+SUB tytul_menu_nowagra (tymczasowa_kolumna) 'ekran tytulowy - submenu "Nowa gra"
     DO: _LIMIT 500
         klawisz$ = UCASE$(INKEY$)
         DO
@@ -59,13 +59,8 @@ SUB tytul_menu_nowagra 'ekran tytulowy - submenu "Nowa gra"
             'EXIT SUB
             'END IF
             IF wiersz = 23 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN 'wstecz
-                DO 'czyszczenie bufora myszy
-                    DO WHILE _MOUSEINPUT
-                        koordynaty_kursora wiersz, kolumna
-                        SLEEP 1
-                        EXIT SUB
-                    LOOP
-                LOOP UNTIL _MOUSEBUTTON(1) = 0
+                tymczasowa_kolumna = kolumna
+                EXIT SUB
             END IF
         LOOP WHILE _MOUSEINPUT
         'klawiatura
@@ -81,7 +76,7 @@ SUB tytul_menu_nowagra 'ekran tytulowy - submenu "Nowa gra"
     LOOP
 END SUB
 
-SUB tytul_menu_edytor 'ekran tytulowy - submenu "Edytor"
+SUB tytul_menu_edytor (tymczasowa_kolumna) 'ekran tytulowy - submenu "Edytor"
     DO: _LIMIT 500
         klawisz$ = UCASE$(INKEY$)
         DO
@@ -116,13 +111,8 @@ SUB tytul_menu_edytor 'ekran tytulowy - submenu "Edytor"
             'EXIT SUB
             'END IF
             IF wiersz = 23 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN 'wstecz
-                DO 'czyszczenie bufora myszy
-                    DO WHILE _MOUSEINPUT
-                        koordynaty_kursora wiersz, kolumna
-                        SLEEP 1
-                        EXIT SUB
-                    LOOP
-                LOOP UNTIL _MOUSEBUTTON(1) = 0
+                tymczasowa_kolumna = kolumna
+                EXIT SUB
             END IF
         LOOP WHILE _MOUSEINPUT
         'zdarzenia klawiatury
@@ -180,7 +170,7 @@ SUB gra_menu_plik (x)
     ramka_liczba_wierszy% = 4
     ramka_dlugosc_tekstu% = 8
     ramka_kolor_znakow% = 0: ramka_kolor_tla% = 7
-    ramka_gora$ = "Ä": ramka_dol$ = "Ä": ramka_boki$ = "ł"
+    ramka_gora$ = CHR$(196): ramka_dol$ = CHR$(196): ramka_boki$ = CHR$(179)
     rysuj_ramke ramka_wiersz_poczatku%, ramka_kolumna_poczatku%, ramka_liczba_wierszy%, ramka_dlugosc_tekstu%, ramka_kolor_znakow%, ramka_kolor_tla%, ramka_gora$, ramka_dol$, ramka_boki$
     COLOR 7, 0: LOCATE 1, 2: PRINT " Plik " 'odwroc kolory w nazwie otwartego menu
     'petla obslugi klawiatury i myszy - wybor opcji lub zamkniecie menu
@@ -241,7 +231,7 @@ SUB gra_tryb_pelny_okno_pociagi
     ramka_liczba_wierszy% = 1
     ramka_dlugosc_tekstu% = 7
     ramka_kolor_znakow% = 0: ramka_kolor_tla% = 7
-    ramka_gora$ = "Í": ramka_dol$ = "Ä": ramka_boki$ = "ł"
+    ramka_gora$ = CHR$(205): ramka_dol$ = CHR$(196): ramka_boki$ = CHR$(179)
     rysuj_ramke ramka_wiersz_poczatku%, ramka_kolumna_poczatku%, ramka_liczba_wierszy%, ramka_dlugosc_tekstu%, ramka_kolor_znakow%, ramka_kolor_tla%, ramka_gora$, ramka_dol$, ramka_boki$
     COLOR 7, 0: LOCATE 1, 8: PRINT " Pociagi " 'odwroc kolory w nazwie otwartego okna
     'zawartosc okna
@@ -306,7 +296,8 @@ SUB edytor_tryb_pelny
         klawisz$ = UCASE$(INKEY$)
         DO: _LIMIT 500
             koordynaty_kursora wiersz, kolumna
-            rysuj_ramke 2, 1, 23, 65, 0, 3, "Í", "Í", "ş" 'ramka mapy
+            ramka_gora$ = CHR$(205): ramka_dol$ = CHR$(205): ramka_boki$ = CHR$(186)
+            rysuj_ramke 2, 1, 23, 65, 0, 3, ramka_gora$, ramka_dol$, ramka_boki$ 'ramka mapy
             'obliczanie pozycji kursora na mapie
             wiersz_mapy% = wiersz - wiersz_poczatku_mapy% - 1
             kolumna_mapy% = kolumna + kolumna_poczatku_mapy% - 3
@@ -318,7 +309,8 @@ SUB edytor_tryb_pelny
             COLOR 0, 7: LOCATE 2, 3: PRINT " wiersz:   ": LOCATE 2, 11: PRINT wiersz_mapy%;
             LOCATE 2, 14: PRINT ", kolumna:    ": LOCATE 2, 24: PRINT kolumna_mapy%;
             IF wiersz = 2 AND kolumna > 3 AND kolumna < 27 THEN
-                rysuj_ramke 3, 3, 1, 18, 0, 3, "Ä", "Ä", "ł" 'etykieta
+                ramka_gora$ = CHR$(196): ramka_dol$ = CHR$(196): ramka_boki$ = CHR$(179)
+                rysuj_ramke 3, 3, 1, 18, 0, 3, ramka_gora$, ramka_dol$, ramka_boki$ 'etykieta
                 COLOR 0, 7: LOCATE 4, 4: PRINT " koordynaty kursora ";
             END IF
             'IF kolumna > 1 AND kolumna < 6 AND wiersz = 1 AND _MOUSEBUTTON(1) THEN edytor_menu_plik x
@@ -336,7 +328,7 @@ SUB edytor_tryb_pelny
             edytor_tryb_pelny_tablica_znakow wiersz, kolumna, znak$ 'wyswietlanie tablicy znakow i ladowanie znaku do zmiennej 'znak$'
             'edytor_tryb_pelny_kolor_znaku 'ustaw kolor tekstu z palety
             'edytor_tryb_pelny_kolor_tla 'ustaw kolor tla z palety
-            IF wiersz > 2 AND wiersz < 25 AND kolumna > 1 AND kolumna < 69 AND _MOUSEBUTTON(1) AND znak$ <> "" THEN 'klikniecie w ramce mapy
+            IF wiersz > 2 AND wiersz < 25 AND kolumna > 1 AND kolumna < 69 AND _MOUSEBUTTON(1) AND znak$ <> "" AND (wiersz <> tymczasowy_wiersz OR kolumna <> tymczasowa_kolumna) THEN 'klikniecie w ramce mapy
                 nr_rekordu% = liczba_rekordow_tabeli_mapy% + 1 'numer nowego rekordu
                 tabela_wiersz_znaku(nr_rekordu%) = wiersz_mapy%
                 tabela_kolumna_znaku(nr_rekordu%) = kolumna_mapy%
@@ -344,6 +336,7 @@ SUB edytor_tryb_pelny
                 tabela_kolor_tla(nr_rekordu%) = kolor_tla%
                 tabela_znak(nr_rekordu%) = ASC(znak$)
                 liczba_rekordow_tabeli_mapy% = nr_rekordu% 'aktualizuje liczbe rekordow
+                tymczasowy_wiersz = wiersz: tymczasowa_kolumna = kolumna 'zmienne do zablokowania IFa dopoki gracz nie poruszy mysza
                 'zapisanie tabeli do pliku
             END IF
             COLOR 0, 4: LOCATE 18, 18: PRINT "liczba rekordow"; liczba_rekordow_tabeli_mapy%; 'KONTROLKA
@@ -351,7 +344,7 @@ SUB edytor_tryb_pelny
             'wyswietlanie mapy z tabeli
             IF liczba_rekordow_tabeli_mapy% > 0 THEN 'tylko jesli cokolwiek do niej wpisano
                 FOR i = 1 TO liczba_rekordow_tabeli_mapy%
-                    COLOR tabela_kolor_znaku(i), tabela_kolor_tla(i): LOCATE tabela_wiersz_znaku(i), tabela_kolumna_znaku(1): PRINT CHR$(tabela_znak(1));
+                    COLOR tabela_kolor_znaku(i), tabela_kolor_tla(i): LOCATE tabela_wiersz_znaku(i) + 3, tabela_kolumna_znaku(i) + 1: PRINT CHR$(tabela_znak(i));
                 NEXT i
             END IF
         LOOP WHILE _MOUSEINPUT

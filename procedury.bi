@@ -94,19 +94,19 @@ SUB rysuj_ramke (ramka_wiersz_poczatku%, ramka_kolumna_poczatku%, ramka_liczba_w
     COLOR ramka_kolor_znakow%, ramka_kolor_tla%
     'narozniki ustalane automatycznie na podstawie ksztaltu bokow
     LOCATE ramka_wiersz_poczatku%, ramka_kolumna_poczatku% 'lewy gorny naroznik
-    IF ramka_gora$ = "Ä" AND ramka_boki$ = "ł" THEN PRINT "Ú";
-    IF ramka_gora$ = "Í" AND ramka_boki$ = "ł" THEN PRINT "Ő";
-    IF ramka_gora$ = "Í" AND ramka_boki$ = "ş" THEN PRINT "É";
+    IF ramka_gora$ = CHR$(196) AND ramka_boki$ = CHR$(179) THEN PRINT CHR$(218);
+    IF ramka_gora$ = CHR$(205) AND ramka_boki$ = CHR$(179) THEN PRINT CHR$(213);
+    IF ramka_gora$ = CHR$(205) AND ramka_boki$ = CHR$(186) THEN PRINT CHR$(201);
     LOCATE ramka_wiersz_poczatku%, ramka_kolumna_poczatku% + ramka_dlugosc_tekstu% + 3 'prawy gorny naroznik
-    IF ramka_gora$ = "Ä" AND ramka_boki$ = "ł" THEN PRINT "ż";
-    IF ramka_gora$ = "Í" AND ramka_boki$ = "ł" THEN PRINT "¸";
-    IF ramka_gora$ = "Í" AND ramka_boki$ = "ş" THEN PRINT "»";
+    IF ramka_gora$ = CHR$(196) AND ramka_boki$ = CHR$(179) THEN PRINT CHR$(191);
+    IF ramka_gora$ = CHR$(205) AND ramka_boki$ = CHR$(179) THEN PRINT CHR$(184);
+    IF ramka_gora$ = CHR$(205) AND ramka_boki$ = CHR$(186) THEN PRINT CHR$(187);
     LOCATE ramka_wiersz_poczatku% + ramka_liczba_wierszy% + 1, ramka_kolumna_poczatku% 'lewy dolny naroznik
-    IF ramka_boki$ = "ł" THEN PRINT "Ŕ";
-    IF ramka_boki$ = "ş" THEN PRINT "Č";
+    IF ramka_boki$ = CHR$(179) THEN PRINT CHR$(192);
+    IF ramka_boki$ = CHR$(186) THEN PRINT CHR$(200);
     LOCATE ramka_wiersz_poczatku% + ramka_liczba_wierszy% + 1, ramka_kolumna_poczatku% + ramka_dlugosc_tekstu% + 3 'prawy dolny naroznik
-    IF ramka_boki$ = "ł" THEN PRINT "Ů";
-    IF ramka_boki$ = "ş" THEN PRINT "Ľ";
+    IF ramka_boki$ = CHR$(179) THEN PRINT CHR$(217);
+    IF ramka_boki$ = CHR$(186) THEN PRINT CHR$(188);
     FOR i = 1 TO ramka_dlugosc_tekstu% + 2 'rysuj poziome scianki ramki
         LOCATE ramka_wiersz_poczatku%, ramka_kolumna_poczatku% + i: PRINT ramka_gora$;
         LOCATE ramka_wiersz_poczatku% + ramka_liczba_wierszy% + 1, ramka_kolumna_poczatku% + i: PRINT ramka_dol$;
@@ -115,4 +115,12 @@ SUB rysuj_ramke (ramka_wiersz_poczatku%, ramka_kolumna_poczatku%, ramka_liczba_w
         LOCATE ramka_wiersz_poczatku% + i, ramka_kolumna_poczatku%: PRINT ramka_boki$;
         LOCATE ramka_wiersz_poczatku% + i, ramka_kolumna_poczatku% + ramka_dlugosc_tekstu% + 3: PRINT ramka_boki$;
     NEXT
+END SUB
+
+SUB spluczka 'czysci bufor myszy
+    i = 0
+    DO
+        i = i + 1
+    LOOP WHILE _MOUSEINPUT
+    COLOR 0, 4: LOCATE 5, 20: PRINT i
 END SUB

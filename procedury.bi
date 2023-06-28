@@ -54,108 +54,33 @@ SUB edytor_tryb_pelny_tablica_znakow (wiersz, kolumna, znak$)
     LOCATE 7, 70: PRINT "           "; 'wykolejnica i tarcze manewrowe
     LOCATE 8, 70: PRINT "           "; 'semafory
     'DOKLEPAC WYBOR ELEMENTU KLAWISZEM + OPIS SKROTU W RAMCE
-    IF wiersz = 4 AND kolumna = 72 THEN 'kursor na znaku
-        COLOR 0, 3: LOCATE 4, 72: PRINT "-" 'znak w negatywie
-        IF _MOUSEBUTTON(1) THEN znak$ = "-"
-    ELSE
-        COLOR 7, 1: LOCATE 4, 72: PRINT "-" 'znak zwykly
-    END IF
-    IF wiersz = 4 AND kolumna = 74 THEN 'kursor na znaku
-        COLOR 0, 3: LOCATE 4, 74: PRINT "/" 'znak w negatywie
-        IF _MOUSEBUTTON(1) THEN znak$ = "/"
-    ELSE
-        COLOR 7, 1: LOCATE 4, 74: PRINT "/" 'znak zwykly
-    END IF
-    IF wiersz = 4 AND kolumna = 76 THEN 'kursor na znaku
-        COLOR 0, 3: LOCATE 4, 76: PRINT "|" 'znak w negatywie
-        IF _MOUSEBUTTON(1) THEN znak$ = "|"
-    ELSE
-        COLOR 7, 1: LOCATE 4, 76: PRINT "|" 'znak zwykly
-    END IF
-    IF wiersz = 4 AND kolumna = 78 THEN 'kursor na znaku
-        COLOR 0, 3: LOCATE 4, 78: PRINT "\" 'znak w negatywie
-        IF _MOUSEBUTTON(1) THEN znak$ = "\"
-    ELSE
-        COLOR 7, 1: LOCATE 4, 78: PRINT "\" 'znak zwykly
-    END IF
-    IF wiersz = 5 AND kolumna = 72 THEN 'kursor na znaku
-        COLOR 0, 3: LOCATE 5, 72: PRINT "¿" 'znak w negatywie
-        IF _MOUSEBUTTON(1) THEN znak$ = "¿"
-    ELSE
-        COLOR 7, 1: LOCATE 5, 72: PRINT "¿" 'znak zwykly
-    END IF
-    IF wiersz = 5 AND kolumna = 74 THEN 'kursor na znaku
-        COLOR 0, 3: LOCATE 5, 74: PRINT "ø" 'znak w negatywie
-        IF _MOUSEBUTTON(1) THEN znak$ = "ø"
-    ELSE
-        COLOR 7, 1: LOCATE 5, 74: PRINT "ø" 'znak zwykly
-    END IF
-    IF wiersz = 5 AND kolumna = 76 THEN 'kursor na znaku
-        COLOR 0, 3: LOCATE 5, 76: PRINT "⁄" 'znak w negatywie
-        IF _MOUSEBUTTON(1) THEN znak$ = "⁄"
-    ELSE
-        COLOR 7, 1: LOCATE 5, 76: PRINT "⁄" 'znak zwykly
-    END IF
-    IF wiersz = 5 AND kolumna = 78 THEN 'kursor na znaku
-        COLOR 0, 3: LOCATE 5, 78: PRINT "Ÿ" 'znak w negatywie
-        IF _MOUSEBUTTON(1) THEN znak$ = "Ÿ"
-    ELSE
-        COLOR 7, 1: LOCATE 5, 78: PRINT "Ÿ" 'znak zwykly
-    END IF
-    IF wiersz = 6 AND kolumna = 72 THEN 'kursor na znaku
-        COLOR 0, 3: LOCATE 6, 72: PRINT "]" 'znak w negatywie
-        IF _MOUSEBUTTON(1) THEN znak$ = "]"
-    ELSE
-        COLOR 7, 1: LOCATE 6, 72: PRINT "]" 'znak zwykly
-    END IF
-    IF wiersz = 6 AND kolumna = 74 THEN 'kursor na znaku
-        COLOR 0, 3: LOCATE 6, 74: PRINT "[" 'znak w negatywie
-        IF _MOUSEBUTTON(1) THEN znak$ = "["
-    ELSE
-        COLOR 7, 1: LOCATE 6, 74: PRINT "[" 'znak zwykly
-    END IF
-    IF wiersz = 7 AND kolumna = 72 THEN 'kursor na znaku
-        COLOR 0, 3: LOCATE 7, 72: PRINT "^" 'znak w negatywie
-        IF _MOUSEBUTTON(1) THEN znak$ = "^"
-    ELSE
-        COLOR 7, 1: LOCATE 7, 72: PRINT "^" 'znak zwykly
-    END IF
-    IF wiersz = 7 AND kolumna = 74 THEN 'kursor na znaku
-        COLOR 0, 3: LOCATE 7, 74: PRINT "<" 'znak w negatywie
-        IF _MOUSEBUTTON(1) THEN znak$ = "<"
-    ELSE
-        COLOR 7, 1: LOCATE 7, 74: PRINT "<" 'znak zwykly
-    END IF
-    IF wiersz = 7 AND kolumna = 76 THEN 'kursor na znaku
-        COLOR 0, 3: LOCATE 7, 76: PRINT ">" 'znak w negatywie
-        IF _MOUSEBUTTON(1) THEN znak$ = ">"
-    ELSE
-        COLOR 7, 1: LOCATE 7, 76: PRINT ">" 'znak zwykly
-    END IF
-    IF wiersz = 8 AND kolumna = 72 THEN 'kursor na znaku
-        COLOR 0, 3: LOCATE 8, 72: PRINT CHR$(16) 'znak w negatywie
-        IF _MOUSEBUTTON(1) THEN znak$ = CHR$(16)
-    ELSE
-        COLOR 7, 1: LOCATE 8, 72: PRINT CHR$(16) 'znak zwykly
-    END IF
-    IF wiersz = 8 AND kolumna = 74 THEN 'kursor na znaku
-        COLOR 0, 3: LOCATE 8, 74: PRINT CHR$(17) 'znak w negatywie
-        IF _MOUSEBUTTON(1) THEN znak$ = CHR$(17)
-    ELSE
-        COLOR 7, 1: LOCATE 8, 74: PRINT CHR$(17) 'znak zwykly
-    END IF
-    IF wiersz = 8 AND kolumna = 76 THEN 'kursor na znaku
-        COLOR 0, 3: LOCATE 8, 76: PRINT CHR$(30) 'znak w negatywie
-        IF _MOUSEBUTTON(1) THEN znak$ = CHR$(30)
-    ELSE
-        COLOR 7, 1: LOCATE 8, 76: PRINT CHR$(30) 'znak zwykly
-    END IF
-    IF wiersz = 8 AND kolumna = 78 THEN 'kursor na znaku
-        COLOR 0, 3: LOCATE 8, 78: PRINT CHR$(31) 'znak w negatywie
-        IF _MOUSEBUTTON(1) THEN znak$ = CHR$(31)
-    ELSE
-        COLOR 7, 1: LOCATE 8, 78: PRINT CHR$(31) 'znak zwykly
-    END IF
+    DIM tabela_elementow_wiersz(17), tabela_elementow_kolumna(17), tabela_elementow_znak(17) 'tabela znakow do uzytku w edytorze
+    'umieszczenie znakow w tabeli
+    tabela_elementow_wiersz(1) = 4: tabela_elementow_kolumna(1) = 72: tabela_elementow_znak(1) = 45 '-
+    tabela_elementow_wiersz(2) = 4: tabela_elementow_kolumna(2) = 74: tabela_elementow_znak(2) = 47 '/
+    tabela_elementow_wiersz(3) = 4: tabela_elementow_kolumna(3) = 76: tabela_elementow_znak(3) = 124 '|
+    tabela_elementow_wiersz(4) = 4: tabela_elementow_kolumna(4) = 78: tabela_elementow_znak(4) = 92 '\
+    tabela_elementow_wiersz(5) = 5: tabela_elementow_kolumna(5) = 72: tabela_elementow_znak(5) = 192 '≈î
+    tabela_elementow_wiersz(6) = 5: tabela_elementow_kolumna(6) = 74: tabela_elementow_znak(6) = 191 '≈º
+    tabela_elementow_wiersz(7) = 5: tabela_elementow_kolumna(7) = 76: tabela_elementow_znak(7) = 218 '√ö
+    tabela_elementow_wiersz(8) = 5: tabela_elementow_kolumna(8) = 78: tabela_elementow_znak(8) = 217 '≈Æ
+    tabela_elementow_wiersz(9) = 6: tabela_elementow_kolumna(9) = 72: tabela_elementow_znak(9) = 93 ']
+    tabela_elementow_wiersz(10) = 6: tabela_elementow_kolumna(10) = 74: tabela_elementow_znak(10) = 91 '[
+    tabela_elementow_wiersz(11) = 7: tabela_elementow_kolumna(11) = 72: tabela_elementow_znak(11) = 94 '^
+    tabela_elementow_wiersz(12) = 7: tabela_elementow_kolumna(12) = 74: tabela_elementow_znak(12) = 60 '<
+    tabela_elementow_wiersz(13) = 7: tabela_elementow_kolumna(13) = 76: tabela_elementow_znak(13) = 62 '>
+    tabela_elementow_wiersz(14) = 8: tabela_elementow_kolumna(14) = 72: tabela_elementow_znak(14) = 16 '
+    tabela_elementow_wiersz(15) = 8: tabela_elementow_kolumna(15) = 74: tabela_elementow_znak(15) = 17 '
+    tabela_elementow_wiersz(16) = 8: tabela_elementow_kolumna(16) = 76: tabela_elementow_znak(16) = 30 '
+    tabela_elementow_wiersz(17) = 8: tabela_elementow_kolumna(17) = 78: tabela_elementow_znak(17) = 31 '
+    FOR i = 1 TO 17
+        IF wiersz = tabela_elementow_wiersz(i) AND kolumna = tabela_elementow_kolumna(i) THEN 'kursor na znaku
+            COLOR 0, 3: LOCATE tabela_elementow_wiersz(i), tabela_elementow_kolumna(i): PRINT CHR$(tabela_elementow_znak(i)); 'znak w negatywie
+            IF _MOUSEBUTTON(1) THEN znak$ = CHR$(tabela_elementow_znak(i)) 'klikniecie na znaku i zaladowanie go do zmiennej
+        ELSE
+            COLOR 7, 1: LOCATE tabela_elementow_wiersz(i), tabela_elementow_kolumna(i): PRINT CHR$(tabela_elementow_znak(i)); 'znak zwykly
+        END IF
+    NEXT i
 END SUB
 ''''''''''''''''''''''''''' procedury uniwersalne ''''''''''''''''''''''''''''''
 SUB koordynaty_kursora (wiersz, kolumna)
@@ -165,62 +90,29 @@ SUB koordynaty_kursora (wiersz, kolumna)
     LOCATE 30, 67: PRINT ", kolumna="; kolumna;
 END SUB
 
-SUB rysuj_ramke (wiersz_poczatku_ramki, kolumna_poczatku_ramki, liczba_wierszy_menu, dlugosc_tekstu_ramki)
-    COLOR 0, 7 'kolory ramki i jej tla
-    'rysuj narozniki ramki
-    LOCATE wiersz_poczatku_ramki, kolumna_poczatku_ramki: PRINT "⁄"
-    LOCATE wiersz_poczatku_ramki, kolumna_poczatku_ramki + dlugosc_tekstu_ramki + 3: PRINT "ø"
-    LOCATE wiersz_poczatku_ramki + liczba_wierszy_menu + 1, kolumna_poczatku_ramki: PRINT "¿"
-    LOCATE wiersz_poczatku_ramki + liczba_wierszy_menu + 1, kolumna_poczatku_ramki + dlugosc_tekstu_ramki + 3: PRINT "Ÿ"
-    'rysuj poziome scianki ramki
-    FOR i = 1 TO dlugosc_tekstu_ramki + 2
-        LOCATE wiersz_poczatku_ramki, kolumna_poczatku_ramki + i: PRINT "ƒ"
-        LOCATE wiersz_poczatku_ramki + liczba_wierszy_menu + 1, kolumna_poczatku_ramki + i: PRINT "ƒ"
+SUB rysuj_ramke (ramka_wiersz_poczatku%, ramka_kolumna_poczatku%, ramka_liczba_wierszy%, ramka_dlugosc_tekstu%, ramka_kolor_znakow%, ramka_kolor_tla%, ramka_gora$, ramka_dol$, ramka_boki$)
+    COLOR ramka_kolor_znakow%, ramka_kolor_tla%
+    'narozniki ustalane automatycznie na podstawie ksztaltu bokow
+    LOCATE ramka_wiersz_poczatku%, ramka_kolumna_poczatku% 'lewy gorny naroznik
+    IF ramka_gora$ = "√Ñ" AND ramka_boki$ = "≈Ç" THEN PRINT "√ö";
+    IF ramka_gora$ = "√ç" AND ramka_boki$ = "≈Ç" THEN PRINT "≈ê";
+    IF ramka_gora$ = "√ç" AND ramka_boki$ = "≈ü" THEN PRINT "√â";
+    LOCATE ramka_wiersz_poczatku%, ramka_kolumna_poczatku% + ramka_dlugosc_tekstu% + 3 'prawy gorny naroznik
+    IF ramka_gora$ = "√Ñ" AND ramka_boki$ = "≈Ç" THEN PRINT "≈º";
+    IF ramka_gora$ = "√ç" AND ramka_boki$ = "≈Ç" THEN PRINT "¬∏";
+    IF ramka_gora$ = "√ç" AND ramka_boki$ = "≈ü" THEN PRINT "¬ª";
+    LOCATE ramka_wiersz_poczatku% + ramka_liczba_wierszy% + 1, ramka_kolumna_poczatku% 'lewy dolny naroznik
+    IF ramka_boki$ = "≈Ç" THEN PRINT "≈î";
+    IF ramka_boki$ = "≈ü" THEN PRINT "ƒå";
+    LOCATE ramka_wiersz_poczatku% + ramka_liczba_wierszy% + 1, ramka_kolumna_poczatku% + ramka_dlugosc_tekstu% + 3 'prawy dolny naroznik
+    IF ramka_boki$ = "≈Ç" THEN PRINT "≈Æ";
+    IF ramka_boki$ = "≈ü" THEN PRINT "ƒΩ";
+    FOR i = 1 TO ramka_dlugosc_tekstu% + 2 'rysuj poziome scianki ramki
+        LOCATE ramka_wiersz_poczatku%, ramka_kolumna_poczatku% + i: PRINT ramka_gora$;
+        LOCATE ramka_wiersz_poczatku% + ramka_liczba_wierszy% + 1, ramka_kolumna_poczatku% + i: PRINT ramka_dol$;
     NEXT
-    'rysuj pionowe scianki ramki
-    FOR i = 1 TO liczba_wierszy_menu
-        LOCATE wiersz_poczatku_ramki + i, kolumna_poczatku_ramki: PRINT "≥"
-        LOCATE wiersz_poczatku_ramki + i, kolumna_poczatku_ramki + dlugosc_tekstu_ramki + 3: PRINT "≥"
-    NEXT
-END SUB
-
-SUB rysuj_ramke_okna (wiersz_poczatku_ramki, kolumna_poczatku_ramki, liczba_wierszy_menu, dlugosc_tekstu_ramki)
-    COLOR 0, 7 'kolory ramki i jej tla
-    'rysuj narozniki ramki
-    LOCATE wiersz_poczatku_ramki, kolumna_poczatku_ramki: PRINT "’"
-    LOCATE wiersz_poczatku_ramki, kolumna_poczatku_ramki + dlugosc_tekstu_ramki + 3: PRINT "∏"
-    LOCATE wiersz_poczatku_ramki + liczba_wierszy_menu + 1, kolumna_poczatku_ramki: PRINT "¿"
-    LOCATE wiersz_poczatku_ramki + liczba_wierszy_menu + 1, kolumna_poczatku_ramki + dlugosc_tekstu_ramki + 3: PRINT "Ÿ"
-    'rysuj gorna krawedz okna
-    FOR i = 1 TO dlugosc_tekstu_ramki + 2
-        LOCATE wiersz_poczatku_ramki, kolumna_poczatku_ramki + i: PRINT "Õ"
-    NEXT
-    'rysuj dolna krawedz okna
-    FOR i = 1 TO dlugosc_tekstu_ramki + 2
-        LOCATE wiersz_poczatku_ramki + liczba_wierszy_menu + 1, kolumna_poczatku_ramki + i: PRINT "ƒ"
-    NEXT
-    'rysuj pionowe scianki okna
-    FOR i = 1 TO liczba_wierszy_menu
-        LOCATE wiersz_poczatku_ramki + i, kolumna_poczatku_ramki: PRINT "≥"
-        LOCATE wiersz_poczatku_ramki + i, kolumna_poczatku_ramki + dlugosc_tekstu_ramki + 3: PRINT "≥"
-    NEXT
-END SUB
-
-SUB rysuj_ramke_podwojna (wiersz_poczatku_ramki, kolumna_poczatku_ramki, liczba_wierszy_menu, dlugosc_tekstu_ramki, kolor_znakow, kolor_tla)
-    COLOR kolor_znakow, kolor_tla
-    'rysuj narozniki ramki
-    LOCATE wiersz_poczatku_ramki, kolumna_poczatku_ramki: PRINT "…";
-    LOCATE wiersz_poczatku_ramki, kolumna_poczatku_ramki + dlugosc_tekstu_ramki + 3: PRINT "ª";
-    LOCATE wiersz_poczatku_ramki + liczba_wierszy_menu + 1, kolumna_poczatku_ramki: PRINT "»";
-    LOCATE wiersz_poczatku_ramki + liczba_wierszy_menu + 1, kolumna_poczatku_ramki + dlugosc_tekstu_ramki + 3: PRINT "º";
-    'rysuj poziome scianki ramki
-    FOR i = 1 TO dlugosc_tekstu_ramki + 2
-        LOCATE wiersz_poczatku_ramki, kolumna_poczatku_ramki + i: PRINT "Õ";
-        LOCATE wiersz_poczatku_ramki + liczba_wierszy_menu + 1, kolumna_poczatku_ramki + i: PRINT "Õ";
-    NEXT
-    'rysuj pionowe scianki ramki
-    FOR i = 1 TO liczba_wierszy_menu
-        LOCATE wiersz_poczatku_ramki + i, kolumna_poczatku_ramki: PRINT "∫";
-        LOCATE wiersz_poczatku_ramki + i, kolumna_poczatku_ramki + dlugosc_tekstu_ramki + 3: PRINT "∫";
+    FOR i = 1 TO ramka_liczba_wierszy% 'rysuj pionowe scianki ramki
+        LOCATE ramka_wiersz_poczatku% + i, ramka_kolumna_poczatku%: PRINT ramka_boki$;
+        LOCATE ramka_wiersz_poczatku% + i, ramka_kolumna_poczatku% + ramka_dlugosc_tekstu% + 3: PRINT ramka_boki$;
     NEXT
 END SUB

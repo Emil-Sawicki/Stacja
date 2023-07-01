@@ -1,14 +1,15 @@
 _TITLE "Stacja"
 '$EXEICON: 'iconfile.ico' 'adres i nazwa pliku otoczone pojedynczymi apostrofami
 _CONTROLCHR OFF 'umozliwia wypisywanie na ekranie znakow kontrolnych
+folder_gry$ = "D:\Gry\transportowe\Stacja\" 'doklepac setup
 ''''''''''''''''''''''''''''''''' ekran tytulowy '''''''''''''''''''''''''''''''
 liczba_wierszy = 80: liczba_kolumn = 30
 WIDTH liczba_wierszy, liczba_kolumn
-DO: _LIMIT 500 'tytul_obsluga
+DO
     tytul_logo 'logo gry
     COLOR 4, 1: LOCATE 30, 1: PRINT "v1.0 (c) 2023 Emil Sawicki";
     klawisz$ = UCASE$(INKEY$)
-    DO
+    DO: _LIMIT 500
         koordynaty_kursora wiersz, kolumna
         tytul_menu wiersz, kolumna 'rysowanie menu z podswietlaniem wskazanej opcji
         'zdarzenia myszy
@@ -25,9 +26,9 @@ DO: _LIMIT 500 'tytul_obsluga
 LOOP
 
 SUB tytul_menu_nowagra (tymczasowa_kolumna) 'ekran tytulowy - submenu "Nowa gra"
-    DO: _LIMIT 500
+    DO
         klawisz$ = UCASE$(INKEY$)
-        DO
+        DO: _LIMIT 500
             COLOR 7, 8: LOCATE 17, 31: PRINT "     Nowa gra     " 'tytul tego menu jako nieaktywny "przycisk"
             koordynaty_kursora wiersz, kolumna
             'opcje menu i podswietlanie wskazanej
@@ -77,9 +78,9 @@ SUB tytul_menu_nowagra (tymczasowa_kolumna) 'ekran tytulowy - submenu "Nowa gra"
 END SUB
 
 SUB tytul_menu_edytor (tymczasowa_kolumna) 'ekran tytulowy - submenu "Edytor"
-    DO: _LIMIT 500
+    DO
         klawisz$ = UCASE$(INKEY$)
-        DO
+        DO: _LIMIT 500
             COLOR 7, 8: LOCATE 17, 31: PRINT "      Edytor      " 'tytul tego menu jako nieaktywny "przycisk"
             koordynaty_kursora wiersz, kolumna
             'opcje menu i podswietlanie wskazanej
@@ -131,7 +132,7 @@ END SUB
 SUB gra_tryb_pelny
     gra_tryb_pelny_sprawdzanie_plikow
     'WIDTH 80, 25 'zmiana wymiarow okna gry zaleznie od wielkosci zaladowanej mapy
-    DO: _LIMIT 500 'gra_obsluga_pelny
+    DO
         COLOR 0, 7: LOCATE 1, 1: PRINT "  Plik  Pociagi  Sklady  Rozklad  Przebiegi                                     "; 'gra_pasek_menu
         COLOR 4: LOCATE 1, 6: PRINT "k": LOCATE 1, 9: PRINT "P": LOCATE 1, 18: PRINT "S": LOCATE 1, 26: PRINT "R" 'czerwone litery
         gra_tryb_pelny_mapa
@@ -174,9 +175,9 @@ SUB gra_menu_plik (x)
     rysuj_ramke ramka_wiersz_poczatku%, ramka_kolumna_poczatku%, ramka_liczba_wierszy%, ramka_dlugosc_tekstu%, ramka_kolor_znakow%, ramka_kolor_tla%, ramka_gora$, ramka_dol$, ramka_boki$
     COLOR 7, 0: LOCATE 1, 2: PRINT " Plik " 'odwroc kolory w nazwie otwartego menu
     'petla obslugi klawiatury i myszy - wybor opcji lub zamkniecie menu
-    DO: _LIMIT 500
+    DO
         klawisz$ = UCASE$(INKEY$)
-        DO
+        DO: _LIMIT 500
             koordynaty_kursora wiersz, kolumna
             'opcje menu i podswietlanie wskazanej
             IF wiersz = 3 AND kolumna > 1 AND kolumna < 12 THEN 'kursor na napisie
@@ -237,9 +238,9 @@ SUB gra_tryb_pelny_okno_pociagi
     'zawartosc okna
     COLOR 0, 7: LOCATE ramka_wiersz_poczatku% + 1, ramka_kolumna_poczatku% + 2: PRINT "Pociagi "
     'petla obslugi klawiatury i myszy - wybor opcji lub zamkniecie okna
-    DO: _LIMIT 500
+    DO
         klawisz$ = UCASE$(INKEY$)
-        DO
+        DO: _LIMIT 500
             koordynaty_kursora wiersz, kolumna
             IF wiersz = ramka_wiersz_poczatku% AND kolumna = ramka_kolumna_poczatku% + ramka_dlugosc_tekstu% + 2 THEN 'kursor na przycisku
                 COLOR 7, 0: LOCATE ramka_wiersz_poczatku%, ramka_kolumna_poczatku% + ramka_dlugosc_tekstu% + 2: PRINT "X" 'przycisk w negatywie
@@ -285,11 +286,11 @@ SUB edytor_tryb_pelny
     'edytor_tryb_pelny_sprawdzanie_plikow
     wysokosc_mapy% = 25: szerokosc_mapy% = 50 'domyslne wymiary nowej mapy
     pojemnosc_tabeli_mapy% = wysokosc_mapy% * szerokosc_mapy%
-    kolor_znaku% = 7: kolor_tla% = 1 'domyslne kolory: bialy i niebieski
+    kolor_znaku% = 15: kolor_tla% = 0 'domyslne kolory: bialy i czarny
     'deklaracja tabeli
-    DIM tabela_wiersz_znaku(1 TO pojemnosc_tabeli_mapy%), tabela_kolumna_znaku(1 TO pojemnosc_tabeli_mapy%), tabela_kolor_znaku(1 TO pojemnosc_tabeli_mapy%), tabela_kolor_tla(1 TO pojemnosc_tabeli_mapy%), tabela_znak(1 TO pojemnosc_tabeli_mapy%)
+    DIM tabela_wiersz_znaku(1 TO pojemnosc_tabeli_mapy%), tabela_kolumna_znaku(1 TO pojemnosc_tabeli_mapy%), tabela_kolor_znaku(1 TO pojemnosc_tabeli_mapy%), tabela_znak(1 TO pojemnosc_tabeli_mapy%)
     liczba_rekordow_tabeli_mapy% = 0 'domyslnie tabela jest pusta, zmienna potrzebna do wyswietlenia pustej mapy na poczatku edycji
-    DO: _LIMIT 500
+    DO
         COLOR 0, 7: LOCATE 1, 1: PRINT "  Plik                                                                          ";
         COLOR 4: LOCATE 1, 6: PRINT "k"; 'czerwone litery
         wiersz_poczatku_mapy% = 2: kolumna_poczatku_mapy% = 2 'koordynaty poczatku mapy
@@ -325,26 +326,27 @@ SUB edytor_tryb_pelny
             COLOR 7, 0 'wyswietlanie wymiarow
             LOCATE 2, 37: PRINT szerokosc_mapy%: LOCATE 2, 44: PRINT wysokosc_mapy%;
             'zdarzenia myszy
-            edytor_tryb_pelny_tablica_znakow wiersz, kolumna, znak$ 'wyswietlanie tablicy znakow i ladowanie znaku do zmiennej 'znak$'
-            'edytor_tryb_pelny_kolor_znaku 'ustaw kolor tekstu z palety
-            'edytor_tryb_pelny_kolor_tla 'ustaw kolor tla z palety
+            edytor_pelny_torowisko wiersz, kolumna, znak$, kolor_znaku% 'wyswietlanie tablicy znakow i ladowanie znaku do zmiennej 'znak$'
+            'edytor_pelny_torowisko_kolor_znaku wiersz, kolumna, kolor_znaku%
+            'edytor_tryb_pelny_kolor_tla kolor_tla% 'ustaw kolor tla z palety
             IF wiersz > 2 AND wiersz < 25 AND kolumna > 1 AND kolumna < 69 AND _MOUSEBUTTON(1) AND znak$ <> "" AND (wiersz <> tymczasowy_wiersz OR kolumna <> tymczasowa_kolumna) THEN 'klikniecie w ramce mapy
                 nr_rekordu% = liczba_rekordow_tabeli_mapy% + 1 'numer nowego rekordu
                 tabela_wiersz_znaku(nr_rekordu%) = wiersz_mapy%
                 tabela_kolumna_znaku(nr_rekordu%) = kolumna_mapy%
                 tabela_kolor_znaku(nr_rekordu%) = kolor_znaku%
-                tabela_kolor_tla(nr_rekordu%) = kolor_tla%
                 tabela_znak(nr_rekordu%) = ASC(znak$)
                 liczba_rekordow_tabeli_mapy% = nr_rekordu% 'aktualizuje liczbe rekordow
                 tymczasowy_wiersz = wiersz: tymczasowa_kolumna = kolumna 'zmienne do zablokowania IFa dopoki gracz nie poruszy mysza
-                'zapisanie tabeli do pliku
+                OPEN folder_gry$ + "tryb pelny\Przykladowa Stacja\mapa.txt" FOR OUTPUT AS #1 'zapisanie tabeli do pliku
+                FOR nr_rekordu% = 1 TO liczba_rekordow_tabeli_mapy%
+                    WRITE #1, tabela_wiersz_znaku(nr_rekordu%), tabela_kolumna_znaku(nr_rekordu%), tabela_kolor_znaku(nr_rekordu%), tabela_znak(nr_rekordu%)
+                NEXT nr_rekordu%
+                CLOSE #1
             END IF
-            COLOR 0, 4: LOCATE 18, 18: PRINT "liczba rekordow"; liczba_rekordow_tabeli_mapy%; 'KONTROLKA
-            IF liczba_rekordow_tabeli_mapy% > 0 THEN LOCATE 20, 20: PRINT "znak"; CHR$(tabela_znak(nr_rekordu%)) 'KONTROLKA
             'wyswietlanie mapy z tabeli
             IF liczba_rekordow_tabeli_mapy% > 0 THEN 'tylko jesli cokolwiek do niej wpisano
                 FOR i = 1 TO liczba_rekordow_tabeli_mapy%
-                    COLOR tabela_kolor_znaku(i), tabela_kolor_tla(i): LOCATE tabela_wiersz_znaku(i) + 3, tabela_kolumna_znaku(i) + 1: PRINT CHR$(tabela_znak(i));
+                    COLOR tabela_kolor_znaku(i), 0: LOCATE tabela_wiersz_znaku(i) + 3, tabela_kolumna_znaku(i) + 1: PRINT CHR$(tabela_znak(i));
                 NEXT i
             END IF
         LOOP WHILE _MOUSEINPUT

@@ -44,15 +44,16 @@ SUB tytul_menu (wiersz, kolumna)
     END IF
 END SUB
 '''''''''''''''''''''''''' edytor map - tryb pelny '''''''''''''''''''''''''''''
-SUB edytor_tryb_pelny_tablica_znakow (wiersz, kolumna, znak$)
+SUB edytor_pelny_torowisko (wiersz, kolumna, znak$, kolor_znaku%)
     COLOR 7, 1
-    LOCATE 2, 70: PRINT " elementy  "
-    LOCATE 3, 70: PRINT " torowiska "
+    LOCATE 2, 70: PRINT " elementy  ";
+    LOCATE 3, 70: PRINT " torowiska ";
     LOCATE 4, 70: PRINT "           "; 'proste tory
     LOCATE 5, 70: PRINT "           "; 'rozjazdy
     LOCATE 6, 70: PRINT "           "; 'uporki
     LOCATE 7, 70: PRINT "           "; 'wykolejnica i tarcze manewrowe
     LOCATE 8, 70: PRINT "           "; 'semafory
+    LOCATE 9, 70: PRINT "           ";
     'DOKLEPAC WYBOR ELEMENTU KLAWISZEM + OPIS SKROTU W RAMCE
     DIM tabela_elementow_wiersz(17), tabela_elementow_kolumna(17), tabela_elementow_znak(17) 'tabela znakow do uzytku w edytorze
     'umieszczenie znakow w tabeli
@@ -81,11 +82,21 @@ SUB edytor_tryb_pelny_tablica_znakow (wiersz, kolumna, znak$)
             COLOR 7, 1: LOCATE tabela_elementow_wiersz(i), tabela_elementow_kolumna(i): PRINT CHR$(tabela_elementow_znak(i)); 'znak zwykly
         END IF
     NEXT i
+    COLOR 7, 1
+    LOCATE 10, 70: PRINT "  kolor    ";
+    LOCATE 11, 70: PRINT " elementu  ";
+    COLOR 15: LOCATE 12, 70: PRINT " "; CHR$(219); CHR$(219); CHR$(219); CHR$(219); "      ";
+    COLOR 14: LOCATE 12, 76: PRINT CHR$(219); CHR$(219); CHR$(219); CHR$(219);
+    IF wiersz = 12 AND kolumna > 70 AND kolumna < 75 AND _MOUSEBUTTON(1) THEN kolor_znaku% = 15 'bialy - tor niezelektryfikowany
+    IF wiersz = 12 AND kolumna > 75 AND kolumna < 80 AND _MOUSEBUTTON(1) THEN kolor_znaku% = 14 'zolty - tor zelektryfikowany
+    IF wiersz = 12 AND kolumna > 70 AND kolumna < 75 THEN COLOR 7: LOCATE 12, 71: PRINT CHR$(219); CHR$(219); CHR$(219); CHR$(219); 'podswietlenie wskazanego
+    IF wiersz = 12 AND kolumna > 75 AND kolumna < 80 THEN COLOR 6: LOCATE 12, 76: PRINT CHR$(219); CHR$(219); CHR$(219); CHR$(219);
+    IF kolor_znaku% = 15 THEN COLOR 0, 7: LOCATE 12, 71: PRINT "[": LOCATE 12, 74: PRINT "]"; 'zaznaczenie aktywnego
+    IF kolor_znaku% = 14 THEN COLOR 0, 6: LOCATE 12, 76: PRINT "[": LOCATE 12, 79: PRINT "]";
 END SUB
 ''''''''''''''''''''''''''' procedury uniwersalne ''''''''''''''''''''''''''''''
 SUB koordynaty_kursora (wiersz, kolumna)
     wiersz = _MOUSEY: kolumna = _MOUSEX
-    LOCATE 30, 50: PRINT _MOUSEBUTTON(1);
     COLOR 4, 1: LOCATE 30, 56: PRINT "wiersz="; wiersz;
     LOCATE 30, 67: PRINT ", kolumna="; kolumna;
 END SUB

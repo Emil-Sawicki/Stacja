@@ -1,7 +1,8 @@
 _TITLE "Stacja"
 '$EXEICON: 'iconfile.ico' 'adres i nazwa pliku otoczone pojedynczymi apostrofami
+'$DYNAMIC 'umozliwia zmiane dlugosci tabeli poleceniem REDIM
 _CONTROLCHR OFF 'umozliwia wypisywanie na ekranie znakow kontrolnych
-folder_gry$ = "D:\Gry\transportowe\Stacja\" 'doklepac setup
+folder_gry$ = ".\"
 ''''''''''''''''''''''''''''''''' ekran tytulowy '''''''''''''''''''''''''''''''
 liczba_wierszy = 80: liczba_kolumn = 30
 WIDTH liczba_wierszy, liczba_kolumn
@@ -104,7 +105,7 @@ SUB tytul_menu_edytor (tymczasowa_kolumna) 'ekran tytulowy - submenu "Edytor"
             END IF
             'zdarzenia myszy
             IF wiersz = 19 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN
-                edytor_tryb_pelny
+                edytor_pelny_wybor_warstwy
                 EXIT SUB 'po zakonczeniu gry powrot do glownego menu
             END IF
             'IF wiersz = 21 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN
@@ -118,8 +119,8 @@ SUB tytul_menu_edytor (tymczasowa_kolumna) 'ekran tytulowy - submenu "Edytor"
         LOOP WHILE _MOUSEINPUT
         'zdarzenia klawiatury
         IF klawisz$ = "P" THEN
-            edytor_tryb_pelny
-            EXIT SUB 'po zakonczeniu gry powrot do glownego menu
+            edytor_pelny_wybor_warstwy
+            EXIT SUB 'po zakonczeniu edytora powrot do ekranu tytulowego
         END IF
         'IF klawisz$ = "U" THEN
         '    edytor_tryb_uproszczony
@@ -280,9 +281,34 @@ SUB gra_tryb_pelny_mapa
 END SUB
 '''''''''''''''''''''''''''' gra - tryb uproszczony ''''''''''''''''''''''''''''
 '''''''''''''''''''''''''''' edytor map - tryb pelny '''''''''''''''''''''''''''
-'wybor edytora - nowa mapa lub istniejaca
-SUB edytor_tryb_pelny
+'''''''''''''''''''''''''' edytor map - wybor warstwy ''''''''''''''''''''''''''
+SUB edytor_pelny_wybor_warstwy
+    edytor_warstwa% = 1 'domyslna warstwa edytora
     CLS , 0
+    DO
+        DO: _LIMIT 500
+            koordynaty_kursora wiersz, kolumna
+            'menu Warstwa
+            IF edytor_warstwa% = 1 THEN 'mapa
+                edytor_pelny_mapa x
+            END IF
+            IF edytor_warstwa% = 2 THEN 'oznaczanie torow
+                'edytor_pelny_tory
+            END IF
+            IF edytor_warstwa% = 3 THEN 'oznaczanie rozjazdow
+                'edytor_pelny_rozjazdy
+            END IF
+            IF edytor_warstwa% = 4 THEN 'oznaczanie sygnalizatorow
+                'edytor_pelny_sygnalizatory
+            END IF
+        LOOP WHILE _MOUSEINPUT
+        IF x = 1 THEN EXIT SUB 'przy kliknieciu w menu opcji "Koniec" ustawiana jest zmienna x, ktora wychodzi z TEJ petli
+    LOOP
+END SUB
+''''''''''''''''' edytor map - tryb pelny - warstwa mapy '''''''''''''''''''''''
+'wybor edytora - nowa mapa lub istniejaca
+SUB edytor_pelny_mapa (x) 'edytor_wybor_warstwy opcja nr 1
+    CLS , 1
     'edytor_tryb_pelny_sprawdzanie_plikow
     wysokosc_mapy% = 25: szerokosc_mapy% = 50 'domyslne wymiary nowej mapy
     pojemnosc_tabeli_mapy% = wysokosc_mapy% * szerokosc_mapy%
@@ -291,34 +317,39 @@ SUB edytor_tryb_pelny
     DIM tabela_wiersz_znaku(1 TO pojemnosc_tabeli_mapy%), tabela_kolumna_znaku(1 TO pojemnosc_tabeli_mapy%), tabela_kolor_znaku(1 TO pojemnosc_tabeli_mapy%), tabela_znak(1 TO pojemnosc_tabeli_mapy%)
     liczba_rekordow_tabeli_mapy% = 0 'domyslnie tabela jest pusta, zmienna potrzebna do wyswietlenia pustej mapy na poczatku edycji
     DO
-        COLOR 0, 7: LOCATE 1, 1: PRINT "  Plik                                                                          ";
-        COLOR 4: LOCATE 1, 6: PRINT "k"; 'czerwone litery
         wiersz_poczatku_mapy% = 2: kolumna_poczatku_mapy% = 2 'koordynaty poczatku mapy
         klawisz$ = UCASE$(INKEY$)
         DO: _LIMIT 500
             koordynaty_kursora wiersz, kolumna
+            'pasek menu
+            COLOR 0, 7: LOCATE 1, 1: PRINT "  Plik  Warstwy  Instrukcja                                                     ";
+            COLOR 4: LOCATE 1, 6: PRINT "k"; 'czerwone litery
+            'ramka mapy
             ramka_gora$ = CHR$(205): ramka_dol$ = CHR$(205): ramka_boki$ = CHR$(186)
-            rysuj_ramke 2, 1, 23, 65, 0, 3, ramka_gora$, ramka_dol$, ramka_boki$ 'ramka mapy
+            rysuj_ramke 2, 1, 23, 65, 0, 3, ramka_gora$, ramka_dol$, ramka_boki$
             'obliczanie pozycji kursora na mapie
-            wiersz_mapy% = wiersz - wiersz_poczatku_mapy% - 1
+            wiersz_mapy% = wiersz - wiersz_poczatku_mapy%
             kolumna_mapy% = kolumna + kolumna_poczatku_mapy% - 3
             'wyswietlanie pozycji kursora na mapie
-            IF wiersz_mapy% < 1 THEN wiersz_mapy% = 1
-            IF wiersz_mapy% > 40 THEN wiersz_mapy% = 40
-            IF kolumna_mapy% < 1 THEN kolumna_mapy% = 1
-            IF kolumna_mapy% > 60 THEN kolumna_mapy% = 60
-            COLOR 0, 7: LOCATE 2, 3: PRINT " wiersz:   ": LOCATE 2, 11: PRINT wiersz_mapy%;
-            LOCATE 2, 14: PRINT ", kolumna:    ": LOCATE 2, 24: PRINT kolumna_mapy%;
+            wiersz_mapy_wyswietlany% = wiersz_mapy%
+            kolumna_mapy_wyswietlana% = kolumna_mapy%
+            IF wiersz_mapy% < 1 THEN wiersz_mapy_wyswietlany% = 1
+            IF wiersz_mapy% > 40 THEN wiersz_mapy_wyswietlany% = 40
+            IF kolumna_mapy% < 1 THEN kolumna_mapy_wyswietlana% = 1
+            IF kolumna_mapy% > 60 THEN kolumna_mapy_wyswietlana% = 60
+            COLOR 0, 7: LOCATE 2, 3: PRINT " wiersz:   ": LOCATE 2, 11: PRINT wiersz_mapy_wyswietlany%;
+            LOCATE 2, 14: PRINT ", kolumna:    ": LOCATE 2, 24: PRINT kolumna_mapy_wyswietlana%;
+            'okno mapy - etykieta koordynat kursora
             IF wiersz = 2 AND kolumna > 3 AND kolumna < 27 THEN
                 ramka_gora$ = CHR$(196): ramka_dol$ = CHR$(196): ramka_boki$ = CHR$(179)
-                rysuj_ramke 3, 3, 1, 18, 0, 3, ramka_gora$, ramka_dol$, ramka_boki$ 'etykieta
+                rysuj_ramke 3, 3, 1, 18, 0, 3, ramka_gora$, ramka_dol$, ramka_boki$
                 COLOR 0, 7: LOCATE 4, 4: PRINT " koordynaty kursora ";
             END IF
-            'IF kolumna > 1 AND kolumna < 6 AND wiersz = 1 AND _MOUSEBUTTON(1) THEN edytor_menu_plik x
-            COLOR 7, 0 'interfejs zmiany wielkosci mapy: strzalki i pola tekstowe
+            'przyciski do zmiany wielkosci mapy
+            COLOR 7, 0
             LOCATE 2, 36: PRINT CHR$(17): LOCATE 2, 41: PRINT CHR$(16); 'szerokosc mapy
             LOCATE 2, 43: PRINT CHR$(31): LOCATE 2, 48: PRINT CHR$(30); 'wysokosc mapy
-            'wprowadzenie przez gracza wielkosci mapy
+            'wprowadzenie wartosci liczbowych
             IF wiersz = 2 AND kolumna = 36 AND _MOUSEBUTTON(1) THEN szerokosc_mapy% = szerokosc_mapy% - 1 'strzalka w lewo
             IF wiersz = 2 AND kolumna = 41 AND _MOUSEBUTTON(1) THEN szerokosc_mapy% = szerokosc_mapy% + 1 'strzalka w prawo
             IF wiersz = 2 AND kolumna = 43 AND _MOUSEBUTTON(1) THEN wysokosc_mapy% = wysokosc_mapy% - 1 'strzalka w dol
@@ -326,33 +357,73 @@ SUB edytor_tryb_pelny
             COLOR 7, 0 'wyswietlanie wymiarow
             LOCATE 2, 37: PRINT szerokosc_mapy%: LOCATE 2, 44: PRINT wysokosc_mapy%;
             'zdarzenia myszy
-            edytor_pelny_torowisko wiersz, kolumna, znak$, kolor_znaku% 'wyswietlanie tablicy znakow i ladowanie znaku do zmiennej 'znak$'
-            'edytor_pelny_torowisko_kolor_znaku wiersz, kolumna, kolor_znaku%
-            'edytor_tryb_pelny_kolor_tla kolor_tla% 'ustaw kolor tla z palety
+            IF kolumna > 1 AND kolumna < 6 AND wiersz = 1 AND _MOUSEBUTTON(1) THEN edytor_menu_plik x
+            'menu wyboru warstwy
+            edytor_pelny_torowisko wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna, znak$, kolor_znaku% 'wyswietlanie tablicy znakow i ladowanie znaku do zmiennej 'znak$'
             IF wiersz > 2 AND wiersz < 25 AND kolumna > 1 AND kolumna < 69 AND _MOUSEBUTTON(1) AND znak$ <> "" AND (wiersz <> tymczasowy_wiersz OR kolumna <> tymczasowa_kolumna) THEN 'klikniecie w ramce mapy
-                nr_rekordu% = liczba_rekordow_tabeli_mapy% + 1 'numer nowego rekordu
-                tabela_wiersz_znaku(nr_rekordu%) = wiersz_mapy%
-                tabela_kolumna_znaku(nr_rekordu%) = kolumna_mapy%
-                tabela_kolor_znaku(nr_rekordu%) = kolor_znaku%
-                tabela_znak(nr_rekordu%) = ASC(znak$)
-                liczba_rekordow_tabeli_mapy% = nr_rekordu% 'aktualizuje liczbe rekordow
-                tymczasowy_wiersz = wiersz: tymczasowa_kolumna = kolumna 'zmienne do zablokowania IFa dopoki gracz nie poruszy mysza
-                OPEN folder_gry$ + "tryb pelny\Przykladowa Stacja\mapa.txt" FOR OUTPUT AS #1 'zapisanie tabeli do pliku
-                FOR nr_rekordu% = 1 TO liczba_rekordow_tabeli_mapy%
-                    WRITE #1, tabela_wiersz_znaku(nr_rekordu%), tabela_kolumna_znaku(nr_rekordu%), tabela_kolor_znaku(nr_rekordu%), tabela_znak(nr_rekordu%)
-                NEXT nr_rekordu%
-                CLOSE #1
-            END IF
-            'wyswietlanie mapy z tabeli
-            IF liczba_rekordow_tabeli_mapy% > 0 THEN 'tylko jesli cokolwiek do niej wpisano
-                FOR i = 1 TO liczba_rekordow_tabeli_mapy%
-                    COLOR tabela_kolor_znaku(i), 0: LOCATE tabela_wiersz_znaku(i) + 3, tabela_kolumna_znaku(i) + 1: PRINT CHR$(tabela_znak(i));
-                NEXT i
+                tymczasowy_wiersz = wiersz: tymczasowa_kolumna = kolumna 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
+                'NOWA KOLEJNOSC OBSLUGI TABELI
+                '1. WPISYWANIE DO TABELI
+                '2. USUWANIE Z TABELI
+                '3. WYSWIETLANIE ZAWARTOSCI TABELI W RAMCE MAPY
+                '4. ZAPISYWANIE TABELI DO PLIKU
+                'no to jedziemy:
+                '1. WPISYWANIE DO TABELI
+                IF znak$ <> CHR$(88) THEN 'znak nie jest X
+                    nr_rekordu% = liczba_rekordow_tabeli_mapy% + 1 'numer nowego rekordu
+                    tabela_wiersz_znaku(nr_rekordu%) = wiersz_mapy%
+                    tabela_kolumna_znaku(nr_rekordu%) = kolumna_mapy%
+                    tabela_kolor_znaku(nr_rekordu%) = kolor_znaku%
+                    tabela_znak(nr_rekordu%) = ASC(znak$)
+                    liczba_rekordow_tabeli_mapy% = nr_rekordu% 'aktualizuje liczbe rekordow
+                    'input nazwa_mapy_pelny$
+                    'ustaw folder z mapa do zmiennej
+                    OPEN folder_gry$ + "tryb pelny\Przykladowa Stacja\mapa.txt" FOR OUTPUT AS #1 'zapisanie tabeli do pliku
+                    FOR nr_rekordu% = 1 TO liczba_rekordow_tabeli_mapy%
+                        WRITE #1, tabela_wiersz_znaku(nr_rekordu%), tabela_kolumna_znaku(nr_rekordu%), tabela_kolor_znaku(nr_rekordu%), tabela_znak(nr_rekordu%)
+                    NEXT nr_rekordu%
+                    CLOSE #1
+                END IF
+                '2. USUWANIE Z TABELI
+                IF znak$ = CHR$(88) AND liczba_rekordow_tabeli_mapy% > 0 THEN 'znak jest X o wspolrzednych wiersz_mapy%, kolumna_mapy%
+                    'pobranie do zmiennej nr_rekordu% numeru wpisu o wspolrzednych wiersz_mapy% i kolumna_mapy%
+                    FOR i = 1 TO liczba_rekordow_tabeli_mapy%
+                        IF wiersz_mapy% = tabela_wiersz_znaku(i) AND kolumna_mapy% = tabela_kolumna_znaku(i) THEN
+                            nr_rekordu% = i
+                        END IF
+                    NEXT i
+                    'usuwanie konkretnego wpisu, UBOUND zwraca liczbe rekordow
+                    tabela_wiersz_znaku(nr_rekordu%) = tabela_wiersz_znaku(UBOUND(tabela_wiersz_znaku)) 'za dany wpis podstawia ostatni
+                    tabela_kolumna_znaku(nr_rekordu%) = tabela_kolumna_znaku(UBOUND(tabela_kolumna_znaku)) 'jak wyzej
+                    tabela_kolor_znaku(nr_rekordu%) = tabela_kolor_znaku(UBOUND(tabela_kolor_znaku)) 'jak wyzej
+                    tabela_znak(nr_rekordu%) = tabela_znak(UBOUND(tabela_znak)) 'jak wyzej
+                    'ostatni wpis teraz jest dublem wiec trzeba upierdolic tabele o ten rekord
+                    REDIM _PRESERVE tabela_wiersz_znaku(UBOUND(tabela_wiersz_znaku) - 1) '_PRESERVE zeby REDIM nie czyscil rekordow przy zmianie wielkosci tabeli
+                    REDIM _PRESERVE tabela_kolumna_znaku(UBOUND(tabela_kolumna_znaku) - 1)
+                    REDIM _PRESERVE tabela_kolor_znaku(UBOUND(tabela_kolor_znaku) - 1)
+                    REDIM _PRESERVE tabela_znak(UBOUND(tabela_znak) - 1)
+                    COLOR , 0: LOCATE wiersz, kolumna: PRINT " "; 'czysci znak z podgladu mapy
+                END IF
+                '3. WYSWIETLANIE ZAWARTOSCI TABELI W RAMCE MAPY
+                'robi sie
+                '4. ZAPISYWANIE TABELI DO PLIKU
+                'robi sie
+                'odtad usunac
+                'wyswietlanie mapy z tabeli
+                IF liczba_rekordow_tabeli_mapy% > 0 THEN 'tylko jesli cokolwiek do niej wpisano
+                    FOR i = 1 TO liczba_rekordow_tabeli_mapy%
+                        COLOR tabela_kolor_znaku(i), 0: LOCATE tabela_wiersz_znaku(i) + 2, tabela_kolumna_znaku(i) + 1: PRINT CHR$(tabela_znak(i));
+                    NEXT i
+                END IF
+                'dotad usunac
             END IF
         LOOP WHILE _MOUSEINPUT
         'zdarzenia klawiatury
-        'IF klawisz$ = "K" THEN edytor_menu_plik x
-        IF x = 1 THEN EXIT SUB 'przy kliknieciu w menu opcji "Koniec" ustawiana jest zmienna x, ktora wychodzi z TEJ petli
+        IF klawisz$ = "K" THEN edytor_menu_plik x
+        IF x = 1 THEN
+            CLS , 0
+            EXIT SUB 'przy kliknieciu w menu opcji "Koniec" ustawiana jest zmienna x, ktora wychodzi z TEJ petli
+        END IF
     LOOP
 END SUB
 '''''''''''''''''''''''' edytor map - tryb uproszczony '''''''''''''''''''''''''

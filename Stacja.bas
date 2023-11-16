@@ -98,6 +98,7 @@ SUB tytul_menu_nowagra (tymczasowy_wiersz, tymczasowa_kolumna) 'potrzebne do zab
 END SUB
 
 SUB tytul_menu_edytor (tymczasowa_kolumna) 'ekran tytulowy - submenu "Edytor"
+    edytor_pelny_warstwa = 1 'domyslna warstwa edytora
     DO
         klawisz$ = UCASE$(INKEY$)
         DO: _LIMIT 500
@@ -124,8 +125,8 @@ SUB tytul_menu_edytor (tymczasowa_kolumna) 'ekran tytulowy - submenu "Edytor"
             END IF
             'zdarzenia myszy
             IF wiersz = 19 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN
-                edytor_pelny_wybor_warstwy
-                EXIT SUB 'po zakonczeniu gry powrot do glownego menu ekranu tytulowego
+                edytor_pelny_uruchamianie_warstwy edytor_pelny_warstwa
+                EXIT SUB 'po zakonczeniu edytora powrot do glownego menu ekranu tytulowego
             END IF
             'IF wiersz = 21 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN
             '    edytor_tryb_uproszczony
@@ -138,7 +139,7 @@ SUB tytul_menu_edytor (tymczasowa_kolumna) 'ekran tytulowy - submenu "Edytor"
         LOOP WHILE _MOUSEINPUT
         'zdarzenia klawiatury
         IF klawisz$ = "P" THEN
-            edytor_pelny_wybor_warstwy
+            edytor_pelny_uruchamianie_warstwy x
             EXIT SUB 'po zakonczeniu edytora powrot do ekranu tytulowego
         END IF
         'IF klawisz$ = "U" THEN
@@ -155,7 +156,7 @@ SUB gra_tryb_pelny
     gra_tryb_pelny_sprawdzanie_plikow
     'WIDTH 80, 25 'zmiana wymiarow okna gry zaleznie od wielkosci zaladowanej mapy
     DO
-        COLOR 0, 7: LOCATE 1, 1: PRINT "  Plik  Pociagi  Sklady  Rozklad  Przebiegi                                     "; 'gra_pasek_menu
+        COLOR 0, 7: LOCATE 1, 1: PRINT "        Pociagi  Sklady  Rozklad  Przebiegi                                     "; 'pierwsza pozycja paska "Plik" juz przerobiona ponizej
         COLOR 4: LOCATE 1, 6: PRINT "k": LOCATE 1, 9: PRINT "P": LOCATE 1, 18: PRINT "S": LOCATE 1, 26: PRINT "R" 'czerwone litery
         gra_tryb_pelny_mapa
         'gra_pelny_pociag
@@ -164,7 +165,14 @@ SUB gra_tryb_pelny
         klawisz$ = UCASE$(INKEY$)
         DO: _LIMIT 500
             koordynaty_kursora wiersz, kolumna
-            'mysz
+            'zdarzenia myszy
+            'gorny pasek menu
+            IF wiersz = 1 AND kolumna > 1 AND kolumna < 7 THEN 'kursor na napisie
+                COLOR 7, 0: LOCATE 1, 2: PRINT " Plik " 'napis w negatywie
+            ELSE
+                COLOR 0, 7: LOCATE 1, 2: PRINT " Plik " 'napis zwykly
+                COLOR 4: LOCATE 1, 6: PRINT "N" 'czerwona litera
+            END IF
             IF kolumna > 1 AND kolumna < 6 AND wiersz = 1 AND _MOUSEBUTTON(1) THEN gra_menu_plik x
             IF kolumna > 6 AND kolumna < 14 AND wiersz = 1 AND _MOUSEBUTTON(1) THEN gra_tryb_pelny_okno_pociagi
         LOOP WHILE _MOUSEINPUT
@@ -308,34 +316,30 @@ END SUB
 '                            EDYTOR MAP - TRYB PELNY                           '
 '------------------------------------------------------------------------------'
 '''''''''''''''''''''''''' edytor map - wybor warstwy ''''''''''''''''''''''''''
-SUB edytor_pelny_wybor_warstwy
-    edytor_warstwa = 1 'domyslna warstwa edytora
+SUB edytor_pelny_uruchamianie_warstwy (edytor_pelny_warstwa)
     CLS , 0
-    DO
-        DO: _LIMIT 500
-            koordynaty_kursora wiersz, kolumna
-            'menu Warstwa
-            IF edytor_warstwa = 1 THEN 'mapa
-                edytor_pelny_mapa x
-            END IF
-            IF edytor_warstwa = 2 THEN 'oznaczanie torow
-                'edytor_pelny_tory
-            END IF
-            IF edytor_warstwa = 3 THEN 'oznaczanie rozjazdow
-                'edytor_pelny_rozjazdy
-            END IF
-            IF edytor_warstwa = 4 THEN 'oznaczanie sygnalizatorow
-                'edytor_pelny_sygnalizatory
-            END IF
-        LOOP WHILE _MOUSEINPUT
-        IF x = 1 THEN EXIT SUB 'przy kliknieciu w menu opcji "Koniec" ustawiana jest zmienna x, ktora wychodzi z TEJ petli
-    LOOP
+    'AUTOMATYCZNY WYBOR WARSTWY NA PODSTAWIE ZMIENNEJ
+    IF edytor_pelny_warstwa = 1 THEN 'mapa
+        edytor_pelny_mapa x
+    END IF
+    IF edytor_pelny_warstwa = 2 THEN 'oznaczanie torow
+        edytor_pelny_tory
+    END IF
+    IF edytor_pelny_warstwa = 3 THEN 'oznaczanie rozjazdow
+        'edytor_pelny_rozjazdy
+    END IF
+    IF edytor_pelny_warstwa = 4 THEN 'oznaczanie sygnalizatorow
+        'edytor_pelny_sygnalizatory
+    END IF
+
+    'KONIEC -  AUTOMATYCZNY WYBOR WARSTWY NA PODSTAWIE ZMIENNEJ
+    IF x = 1 THEN EXIT SUB 'przy kliknieciu w menu opcji "Koniec" ustawiana jest zmienna x, ktora wychodzi z TEJ petli
 END SUB
 '------------------------------------------------------------------------------'
 '                 EDYTOR MAP - TRYB PELNY - WARSTWA MAPY                       '
 '------------------------------------------------------------------------------'
 'wybor edytora - nowa mapa lub istniejaca
-SUB edytor_pelny_mapa (x) 'edytor_wybor_warstwy opcja nr 1
+SUB edytor_pelny_mapa (x) '1. warstwa - rysowanie schematu torow
     CLS , 1
     'edytor_tryb_pelny_sprawdzanie_plikow
     wysokosc_mapy = 25: szerokosc_mapy = 50 'domyslne wymiary nowej mapy
@@ -344,11 +348,8 @@ SUB edytor_pelny_mapa (x) 'edytor_wybor_warstwy opcja nr 1
         wiersz_poczatku_mapy = 2: kolumna_poczatku_mapy = 2 'koordynaty poczatku mapy
         klawisz$ = UCASE$(INKEY$)
         DO: _LIMIT 500
-            koordynaty_kursora wiersz, kolumna
-            'pasek menu
-            COLOR 0, 7: LOCATE 1, 1: PRINT "  Plik  Warstwy  Instrukcja                                                     ";
-            COLOR 4: LOCATE 1, 6: PRINT "k"; 'czerwone litery
             rysuj_ramke 2, 1, 23, 65, 0, 3, CHR$(205), CHR$(205), CHR$(186) 'ramka mapy
+            koordynaty_kursora wiersz, kolumna
             'obliczanie pozycji kursora na mapie
             wiersz_mapy = wiersz - wiersz_poczatku_mapy
             kolumna_mapy = kolumna + kolumna_poczatku_mapy - 3
@@ -371,15 +372,28 @@ SUB edytor_pelny_mapa (x) 'edytor_wybor_warstwy opcja nr 1
             IF wiersz = 2 AND kolumna = 43 AND _MOUSEBUTTON(1) THEN wysokosc_mapy = wysokosc_mapy - 1 'strzalka w dol
             IF wiersz = 2 AND kolumna = 48 AND _MOUSEBUTTON(1) THEN wysokosc_mapy = wysokosc_mapy + 1 'strzalka w gore
             COLOR 7, 0: LOCATE 2, 37: PRINT szerokosc_mapy: LOCATE 2, 44: PRINT wysokosc_mapy; 'wyswietlanie wymiarow
-            IF kolumna > 1 AND kolumna < 6 AND wiersz = 1 AND _MOUSEBUTTON(1) THEN
-                edytor_menu_plik tymczasowy_wiersz, tymczasowa_kolumna, x
-                CLS , 1
-                edytor_pelny_tabela_mapa_wyswietlanie 'rysuje ponownie mape
+            'pasek menu
+            COLOR 0, 7: LOCATE 1, 1: PRINT "        Warstwy  Instrukcja  Slownik                                            ";
+            COLOR 4: LOCATE 1, 6: PRINT "k"; 'czerwone litery
+            LOCATE 1, 9: PRINT "W";
+            'pasek menu z hooverem
+            IF wiersz = 1 AND kolumna > 1 AND kolumna < 7 THEN 'kursor na napisie
+                COLOR 7, 0: LOCATE 1, 2: PRINT " Plik " 'napis w negatywie
+            ELSE
+                COLOR 0, 7: LOCATE 1, 2: PRINT " Plik " 'napis zwykly
+                COLOR 4: LOCATE 1, 3: PRINT "P" 'czerwona litera
             END IF
-            'menu wyboru warstwy
+            'nacisniecia przyciskow paska menu
+            IF wiersz = 1 AND _MOUSEBUTTON(1) THEN
+                IF kolumna > 1 AND kolumna < 6 THEN edytor_menu_plik tymczasowy_wiersz, tymczasowa_kolumna, x
+                IF kolumna > 7 AND kolumna < 17 THEN edytor_pelny_menu_wybor_warstwy tymczasowy_wiersz, tymczasowa_kolumna, edytor_pelny_warstwa
+                CLS , 1
+            END IF
+            'edytor_pelny_menu_warstwa
             'okno mapy - etykieta koordynat kursora
             IF wiersz = 2 AND kolumna > 3 AND kolumna < 27 THEN
-                mapa_koordynaty 'wiersz, kolumna
+                etykieta_mapa_koordynaty 'PRZEROBIC NA WSPOLNA PROCEDURE DLA WSZYSTKICH ETYKIET
+                'ramka_wiersz_poczatku, ramka_kolumna_poczatku, ramka_liczba_wierszy, ramka_dlugosc_tekstu, etykieta_wiersz_1$
                 CLS , 1
             END IF
             spluczka
@@ -432,6 +446,7 @@ SUB edytor_pelny_mapa (x) 'edytor_wybor_warstwy opcja nr 1
                 NEXT nr_rekordu
                 CLOSE #1
             END IF
+            pasek_informacyjny pasek_informacyjny_tresc
         LOOP WHILE _MOUSEINPUT
         'zdarzenia klawiatury
         IF klawisz$ = "K" THEN edytor_menu_plik tymczasowy_wiersz, tymczasowa_kolumna, x 'procedura menu zwraca zmienna x
@@ -441,7 +456,43 @@ SUB edytor_pelny_mapa (x) 'edytor_wybor_warstwy opcja nr 1
         END IF
     LOOP
 END SUB
-'''''''''''''''''''''''' edytor map - tryb uproszczony '''''''''''''''''''''''''
+'------------------------------------------------------------------------------'
+'                 EDYTOR MAP - TRYB PELNY - WARSTWA TOROW                      '
+'------------------------------------------------------------------------------'
+SUB edytor_pelny_tory '2. warstwa - oznaczanie parametrow torow na schemacie
+    DO
+        DO: _LIMIT 500
+            rysuj_ramke 2, 1, 23, 65, 0, 3, CHR$(205), CHR$(205), CHR$(186) 'ramka mapy
+            koordynaty_kursora wiersz, kolumna
+            'obliczanie pozycji kursora na mapie
+            wiersz_mapy = wiersz - wiersz_poczatku_mapy
+            kolumna_mapy = kolumna + kolumna_poczatku_mapy - 3
+            'wyswietlanie pozycji kursora na mapie
+            wiersz_mapy_wyswietlany = wiersz_mapy
+            kolumna_mapy_wyswietlana = kolumna_mapy
+            IF wiersz_mapy < 1 THEN wiersz_mapy_wyswietlany = 1
+            IF wiersz_mapy > 25 THEN wiersz_mapy_wyswietlany = 25
+            IF kolumna_mapy < 1 THEN kolumna_mapy_wyswietlana = 1
+            IF kolumna_mapy > 68 THEN kolumna_mapy_wyswietlana = 60
+            COLOR 0, 7: LOCATE 2, 3: PRINT " wiersz:   ": LOCATE 2, 11: PRINT wiersz_mapy_wyswietlany;
+            LOCATE 2, 14: PRINT ", kolumna:    ": LOCATE 2, 24: PRINT kolumna_mapy_wyswietlana;
+            'pasek menu
+            COLOR 0, 7: LOCATE 1, 1: PRINT "  Plik  Warstwy  Instrukcja  Slownik                                            ";
+            COLOR 4: LOCATE 1, 6: PRINT "k"; 'czerwone litery
+            LOCATE 1, 9: PRINT "W";
+            'zdarzenia myszy
+            IF wiersz = 1 AND _MOUSEBUTTON(1) THEN
+                IF kolumna > 1 AND kolumna < 6 THEN edytor_menu_plik tymczasowy_wiersz, tymczasowa_kolumna, x
+                IF kolumna > 7 AND kolumna < 17 THEN edytor_pelny_menu_wybor_warstwy tymczasowy_wiersz, tymczasowa_kolumna, edytor_pelny_warstwa
+                CLS , 1
+            END IF
+        LOOP WHILE _MOUSEINPUT
+        'zdarzenia klawiatury
+    LOOP
+END SUB
+'------------------------------------------------------------------------------'
+'                        EDYTOR MAP - TRYB UPROSZCZONY                         '
+'------------------------------------------------------------------------------'
 'wybor edytora - nowa mapa lub istniejaca
 '------------------------------------------------------------------------------'
 '                                 EDYTOR TABORU                                '
@@ -480,7 +531,7 @@ SUB edytor_menu_plik (tymczasowy_wiersz, tymczasowa_kolumna, x)
     ramka_kolor_znakow = 0: ramka_kolor_tla = 7
     ramka_gora$ = CHR$(196): ramka_dol$ = CHR$(196): ramka_boki$ = CHR$(179)
     rysuj_ramke ramka_wiersz_poczatku, ramka_kolumna_poczatku, ramka_liczba_wierszy, ramka_dlugosc_tekstu, ramka_kolor_znakow, ramka_kolor_tla, ramka_gora$, ramka_dol$, ramka_boki$
-    COLOR 7, 0: LOCATE 1, 2: PRINT " Plik " 'odwroc kolory w nazwie otwartego menu
+    COLOR 8, 0: LOCATE 1, 2: PRINT " Plik " 'odwroc kolory w nazwie otwartego menu
     'petla obslugi klawiatury i myszy - wybor opcji lub zamkniecie menu
     DO
         klawisz$ = UCASE$(INKEY$)
@@ -514,17 +565,17 @@ SUB edytor_menu_plik (tymczasowy_wiersz, tymczasowa_kolumna, x)
             'zdarzenia myszy
             IF wiersz = 3 AND kolumna > 1 AND kolumna < 13 AND _MOUSEBUTTON(1) THEN
                 tymczasowy_wiersz = wiersz: tymczasowa_kolumna = kolumna
-                edytor_nowa_mapa wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna 'okienko rozpoczynania nowej, czystej mapy
+                edytor_dialog_nowa_mapa wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna 'okienko dialogowe do rozpoczynania nowej, czystej mapy
                 EXIT SUB 'zamknie menu po zamknieciu okienka nowej mapy
             END IF
             IF wiersz = 4 AND kolumna > 1 AND kolumna < 13 AND _MOUSEBUTTON(1) THEN
                 tymczasowy_wiersz = wiersz: tymczasowa_kolumna = kolumna
-                edytor_wczytaj wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna 'okienko zapisu mapy do pliku mapa.txt
+                edytor_dialog_wczytaj wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna 'okienko zapisu mapy do pliku mapa.txt
                 EXIT SUB 'zamknie menu po zakmnieciu okienka wczytywania
             END IF
             IF wiersz = 5 AND kolumna > 1 AND kolumna < 13 AND _MOUSEBUTTON(1) THEN
                 tymczasowy_wiersz = wiersz: tymczasowa_kolumna = kolumna
-                edytor_zapisz wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna 'okienko zapisu mapy do pliku mapa.txt
+                edytor_dialog_zapisz wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna 'okienko zapisu mapy do pliku mapa.txt
                 EXIT SUB 'zamknie menu po zamknieciu okienka zapisu
             END IF
             IF (kolumna > ramka_kolumna_poczatku + ramka_dlugosc_tekstu + 3 OR wiersz > ramka_wiersz_poczatku + ramka_liczba_wierszy + 1) AND _MOUSEBUTTON(1) THEN 'klikniecie poza menu
@@ -538,15 +589,15 @@ SUB edytor_menu_plik (tymczasowy_wiersz, tymczasowa_kolumna, x)
         LOOP WHILE _MOUSEINPUT
         'zdarzenia klawiatury
         IF klawisz$ = "N" THEN
-            edytor_nowa_mapa wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna 'okienko rozpoczynania nowej, czystej mapy
+            edytor_dialog_nowa_mapa wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna 'okienko rozpoczynania nowej, czystej mapy
             EXIT SUB 'zamknie menu po zakmnieciu okienka nowej mapy
         END IF
         IF klawisz$ = "W" THEN
-            edytor_wczytaj wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna
+            edytor_dialog_wczytaj wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna
             EXIT SUB
         END IF
         IF klawisz$ = "Z" THEN
-            edytor_zapisz wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna
+            edytor_dialog_zapisz wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna
             EXIT SUB
         END IF
         IF klawisz$ = "K" THEN
@@ -560,7 +611,7 @@ SUB edytor_menu_plik (tymczasowy_wiersz, tymczasowa_kolumna, x)
     LOOP
 END SUB
 
-SUB edytor_nowa_mapa (wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna)
+SUB edytor_dialog_nowa_mapa (wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna) 'okienko dialogowe do rozpoczynania nowej, czystej mapy
     DO
         klawisz$ = UCASE$(INKEY$)
         DO: _LIMIT 500
@@ -602,7 +653,7 @@ SUB edytor_nowa_mapa (wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna)
     LOOP
 END SUB
 
-SUB edytor_wczytaj (wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna)
+SUB edytor_dialog_wczytaj (wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna)
     DO
         klawisz$ = UCASE$(INKEY$)
         DO: _LIMIT 500
@@ -662,7 +713,7 @@ SUB edytor_wczytaj (wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna)
     LOOP
 END SUB
 
-SUB edytor_zapisz (wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna)
+SUB edytor_dialog_zapisz (wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna)
     DO
         klawisz$ = UCASE$(INKEY$)
         DO: _LIMIT 500
@@ -722,4 +773,5 @@ SUB edytor_zapisz (wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna)
         IF klawisz$ = "N" OR klawisz$ = CHR$(27) THEN EXIT SUB
     LOOP
 END SUB
+
 '$include: 'procedury.bi'

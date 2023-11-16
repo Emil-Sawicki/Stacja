@@ -1,4 +1,7 @@
-''''''''''''''''''''''''''''''' ekrany tytulowy ''''''''''''''''''''''''''''''''
+'------------------------------------------------------------------------------'
+'                              EKRAN TYTULOWY                                  '
+'------------------------------------------------------------------------------'
+
 SUB tytul_logo
     COLOR 0, 2: LOCATE 1, 1
     PRINT "                                                                                "
@@ -44,7 +47,35 @@ SUB tytul_menu (wiersz, kolumna)
         COLOR 4: LOCATE 23, 37: PRINT "K" 'czerwona litera
     END IF
 END SUB
-'''''''''''''''''''''''''' edytor map - tryb pelny '''''''''''''''''''''''''''''
+'------------------------------------------------------------------------------'
+'                      PROCEDURY - EDYTOR MAP - TRYB PELNY                     '
+'------------------------------------------------------------------------------'
+SUB edytor_pelny_menu_wybor_warstwy (tymczasowy_wiersz, tymczasowa_kolumna, edytor_pelny_warstwa) 'menu otwierane w edytorze w celu zmiany warstwy
+    DO
+        rysuj_ramke 2, 7, 2, 16, 0, 7, CHR$(196), CHR$(196), CHR$(179)
+        klawisz$ = UCASE$(INKEY$)
+        DO: _LIMIT 500
+            koordynaty_kursora wiersz, kolumna
+            IF kolumna > 7 AND kolumna < 17 THEN 'kursor w ramce
+                IF wiersz = 3 THEN
+                    COLOR 7, 0: LOCATE 3, 8: PRINT " schemat torow    "; 'napis w negatywie
+                    IF _MOUSEBUTTON(1) THEN warstwa = 1 'rysowanie schematu
+                ELSE
+                    COLOR 0, 7: LOCATE 3, 8: PRINT " schemat torow    "; 'napis zwykly
+                    COLOR 4: LOCATE 3, 9: PRINT "s"; 'czerwona litera
+                END IF
+                IF wiersz = 4 THEN
+                    COLOR 7, 0: LOCATE 4, 8: PRINT " oznaczanie torow "; 'napis w negatywie
+                    IF _MOUSEBUTTON(1) THEN warstwa = 2 'oznaczanie torow
+                ELSE
+                    COLOR 0, 7: LOCATE 4, 8: PRINT " oznaczanie torow "; 'napis zwykly
+                    COLOR 4: LOCATE 4, 9: PRINT "o"; 'czerwona litera
+                END IF
+            END IF
+        LOOP UNTIL _MOUSEINPUT
+    LOOP
+END SUB
+
 SUB edytor_pelny_torowisko (wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna, znak$, kolor_znaku)
     COLOR 7, 1
     LOCATE 2, 70: PRINT " elementy  ";
@@ -62,10 +93,10 @@ SUB edytor_pelny_torowisko (wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolum
     tabela_elementow_wiersz(2) = 4: tabela_elementow_kolumna(2) = 74: tabela_elementow_znak(2) = 47 '/
     tabela_elementow_wiersz(3) = 4: tabela_elementow_kolumna(3) = 76: tabela_elementow_znak(3) = 124 '|
     tabela_elementow_wiersz(4) = 4: tabela_elementow_kolumna(4) = 78: tabela_elementow_znak(4) = 92 '\
-    tabela_elementow_wiersz(5) = 5: tabela_elementow_kolumna(5) = 72: tabela_elementow_znak(5) = 192 'Å”
-    tabela_elementow_wiersz(6) = 5: tabela_elementow_kolumna(6) = 74: tabela_elementow_znak(6) = 191 'Å¼
-    tabela_elementow_wiersz(7) = 5: tabela_elementow_kolumna(7) = 76: tabela_elementow_znak(7) = 218 'Ãš
-    tabela_elementow_wiersz(8) = 5: tabela_elementow_kolumna(8) = 78: tabela_elementow_znak(8) = 217 'Å®
+    tabela_elementow_wiersz(5) = 5: tabela_elementow_kolumna(5) = 72: tabela_elementow_znak(5) = 192 'À
+    tabela_elementow_wiersz(6) = 5: tabela_elementow_kolumna(6) = 74: tabela_elementow_znak(6) = 191 '¿
+    tabela_elementow_wiersz(7) = 5: tabela_elementow_kolumna(7) = 76: tabela_elementow_znak(7) = 218 'Ú
+    tabela_elementow_wiersz(8) = 5: tabela_elementow_kolumna(8) = 78: tabela_elementow_znak(8) = 217 'Ù
     tabela_elementow_wiersz(9) = 6: tabela_elementow_kolumna(9) = 72: tabela_elementow_znak(9) = 93 ']
     tabela_elementow_wiersz(10) = 6: tabela_elementow_kolumna(10) = 74: tabela_elementow_znak(10) = 91 '[
     tabela_elementow_wiersz(11) = 6: tabela_elementow_kolumna(11) = 78: tabela_elementow_znak(11) = 88 'X
@@ -106,14 +137,16 @@ SUB edytor_pelny_torowisko (wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolum
     IF kolor_znaku = 15 THEN COLOR 0, 7: LOCATE 12, 71: PRINT "[": LOCATE 12, 74: PRINT "]"; 'zaznaczenie aktywnego
     IF kolor_znaku = 14 THEN COLOR 0, 6: LOCATE 12, 76: PRINT "[": LOCATE 12, 79: PRINT "]";
 END SUB
-''''''''''''''''''''''''''' procedury uniwersalne ''''''''''''''''''''''''''''''
+'------------------------------------------------------------------------------'
+'                             PROCEDURY UNIWERSALNE                            '
+'------------------------------------------------------------------------------'
 SUB koordynaty_kursora (wiersz, kolumna)
     wiersz = _MOUSEY: kolumna = _MOUSEX
     'COLOR 4, 1: LOCATE 30, 56: PRINT "wiersz="; wiersz; 'OPCJA DEBUG
     'LOCATE 30, 67: PRINT ", kolumna="; kolumna; 'OPCJA DEBUG
 END SUB
 
-SUB mapa_koordynaty '(wiersz, kolumna)
+SUB etykieta_mapa_koordynaty 'PRZEROBIC NA WSPOLNA PROCEDURE DLA WSZYSTKICH ETYKIET
     DO
         DO: _LIMIT 500
             koordynaty_kursora wiersz, kolumna
@@ -148,6 +181,11 @@ SUB rysuj_ramke (ramka_wiersz_poczatku, ramka_kolumna_poczatku, ramka_liczba_wie
         LOCATE ramka_wiersz_poczatku + i, ramka_kolumna_poczatku: PRINT ramka_boki$;
         LOCATE ramka_wiersz_poczatku + i, ramka_kolumna_poczatku + ramka_dlugosc_tekstu + 3: PRINT ramka_boki$;
     NEXT
+END SUB
+
+SUB pasek_informacyjny (pasek_informacyjny_tresc)
+    'rysuj pasek
+    'wpisuj tresc
 END SUB
 
 SUB spluczka 'czysci bufor myszy

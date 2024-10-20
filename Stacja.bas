@@ -5,308 +5,307 @@ _TITLE "Stacja"
 OPTION BASE 1 'pierwszy rekord tabeli domyslnie bedzie mial numer 1 zamiast 0
 '''''''''''''''''''''''''''''' deklaracje zmiennych ''''''''''''''''''''''''''''
 'deklaruje zmienne, ktore musialyby byc przekazane do procedury razem z tabela
-DIM SHARED liczba_rekordow_tabeli_mapy AS INTEGER
-DIM SHARED nr_rekordu AS INTEGER
-DIM SHARED ramka_kolumna_poczatku AS _UNSIGNED _BYTE
-DIM SHARED ramka_wiersz_poczatku AS _UNSIGNED _BYTE
+DIM SHARED MapTableRecCount AS INTEGER
+DIM SHARED RecNr AS INTEGER
+DIM SHARED FramePosX AS _UNSIGNED _BYTE
+DIM SHARED FramePosY AS _UNSIGNED _BYTE
 ''''''''''''''''''''''''''''''' deklaracje stalych '''''''''''''''''''''''''''''
-folder_gry$ = ".\"
+GameDir$ = ".\"
 '''''''''''''''''''''''''''''''' deklaracje typow ''''''''''''''''''''''''''''''
-TYPE typ_tabela_mapa 'rodzaj danych w tabeli
-    wiersz_znaku AS _UNSIGNED _BYTE
-    kolumna_znaku AS _UNSIGNED _BYTE
-    kolor_znaku AS _BYTE
-    znak_kod AS _UNSIGNED _BYTE
+TYPE TypeMapTable 'rodzaj danych w tabeli
+   CharY AS _UNSIGNED _BYTE 'wspolrzedne znaku
+   CharX AS _UNSIGNED _BYTE
+   CharColor AS _BYTE
+   CharCode AS _UNSIGNED _BYTE
 END TYPE
 '''''''''''''''''''''''''''''''' deklaracje tabel ''''''''''''''''''''''''''''''
-DIM SHARED tabela_mapa(1) AS typ_tabela_mapa
+DIM SHARED MapTable(1) AS TypeMapTable 'tabela do przechowywania w pamieci mapy
 '------------------------------------------------------------------------------'
 '                                 EKRAN TYTULOWY                               '
 '------------------------------------------------------------------------------'
-liczba_wierszy = 80: liczba_kolumn = 30
-WIDTH liczba_wierszy, liczba_kolumn
+LineCount = 80: ColumnCount = 30
+WIDTH LineCount, ColumnCount
 DO
-    tytul_logo 'logo gry
-    COLOR 4, 1: LOCATE 30, 1: PRINT "v0.1 (c) 2023 Emil Sawicki";
-    klawisz$ = UCASE$(INKEY$)
-    DO: _LIMIT 500
-        koordynaty_kursora wiersz, kolumna
-        tytul_menu wiersz, kolumna 'rysowanie menu z podswietlaniem wskazanej opcji
-        'zdarzenia myszy
-        IF wiersz = 17 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN tytul_menu_nowagra tymczasowy_wiersz, tymczasowa_kolumna 'submenu "Nowa gra"
-        'IF wiersz = 19 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN tytul_menu_wczytaj
-        IF wiersz = 21 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN tytul_menu_edytor tymczasowa_kolumna
-        IF wiersz = 23 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) AND (wiersz <> tymczasowy_wiersz OR kolumna <> tymczasowa_kolumna) THEN SYSTEM
-    LOOP WHILE _MOUSEINPUT
-    'zdarzenia klawiatury
-    IF klawisz$ = "N" THEN tytul_menu_nowagra tymczasowy_wiersz, tymczasowa_kolumna
-    'IF klawisz$ = "W" THEN tytul_menu_wczytaj
-    IF klawisz$ = "E" THEN tytul_menu_edytor tymczasowa_kolumna
-    IF klawisz$ = "K" OR klawisz$ = CHR$(27) THEN SYSTEM
+   tytul_logo 'logo gry
+   COLOR 4, 1: LOCATE 30, 1: PRINT "v0.1 (c) 2023 Emil Sawicki";
+   Key$ = UCASE$(INKEY$)
+   DO: _LIMIT 500
+      koordynaty_kursora Y, X
+      tytul_menu Y, X 'rysowanie menu z podswietlaniem wskazanej opcji
+      'zdarzenia myszy
+      IF Y = 17 AND X > 30 AND X < 49 AND _MOUSEBUTTON(1) THEN tytul_menu_nowagra TempY, TempX 'submenu "Nowa gra"
+      'IF wiersz = 19 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN tytul_menu_wczytaj
+      IF Y = 21 AND X > 30 AND X < 49 AND _MOUSEBUTTON(1) THEN tytul_menu_edytor TempX
+      IF Y = 23 AND X > 30 AND X < 49 AND _MOUSEBUTTON(1) AND (Y <> TempY OR X <> TempX) THEN SYSTEM
+   LOOP WHILE _MOUSEINPUT
+   'zdarzenia klawiatury
+   IF Key$ = "N" THEN tytul_menu_nowagra TempY, TempX
+   'IF klawisz$ = "W" THEN tytul_menu_wczytaj
+   IF Key$ = "E" THEN tytul_menu_edytor TempX 'Key$, TempY
+   IF Key$ = "K" OR Key$ = CHR$(27) THEN SYSTEM 'Key$
 LOOP
 
-SUB tytul_menu_nowagra (tymczasowy_wiersz, tymczasowa_kolumna) 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON'ekran tytulowy - submenu "Nowa gra"
-    DO
-        klawisz$ = UCASE$(INKEY$)
-        DO: _LIMIT 500
-            COLOR 7, 8: LOCATE 17, 31: PRINT "     Nowa gra     " 'tytul tego menu jako nieaktywny "przycisk"
-            koordynaty_kursora wiersz, kolumna
-            'opcje menu i podswietlanie wskazanej
-            IF wiersz = 19 AND kolumna > 30 AND kolumna < 49 THEN 'kursor na napisie
-                COLOR 7, 0: LOCATE 19, 31: PRINT "    Tryb pelny    " 'napis w negatywie
-            ELSE
-                COLOR 0, 7: LOCATE 19, 31: PRINT "    Tryb pelny    " 'napis zwykly
-                COLOR 4: LOCATE 19, 40: PRINT "p" 'czerwona litera
-            END IF
-            IF wiersz = 21 AND kolumna > 30 AND kolumna < 49 THEN 'kursor na napisie
-                COLOR 7, 0: LOCATE 21, 31: PRINT " Tryb uproszczony " 'napis w negatywie
-            ELSE
-                COLOR 0, 7: LOCATE 21, 31: PRINT " Tryb uproszczony " 'napis zwykly
-                COLOR 4: LOCATE 21, 37: PRINT "u" 'czerwona litera
-            END IF
-            IF wiersz = 23 AND kolumna > 30 AND kolumna < 49 THEN 'kursor na napisie
-                COLOR 7, 0: LOCATE 23, 31: PRINT "      Wstecz      " 'napis w negatywie
-            ELSE
-                COLOR 0, 7: LOCATE 23, 31: PRINT "      Wstecz      " 'napis zwykly
-                COLOR 4: LOCATE 23, 37: PRINT "W" 'czerwona litera
-            END IF
-            'mysz
-            IF wiersz = 19 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN
-                'gra_tryb_pelny 'TYMCZASOWO WYLACZONE
-                EXIT SUB 'po zakonczeniu gry powrot do glownego menu
-            END IF
-            'IF wiersz = 21 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN
-            '    gra_tryb_uproszczony
-            'EXIT SUB
-            'END IF
-            IF wiersz = 23 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN 'wstecz
-                tymczasowy_wiersz = wiersz: tymczasowa_kolumna = kolumna 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
-                EXIT SUB
-            END IF
-        LOOP WHILE _MOUSEINPUT
-        'klawiatura
-        IF klawisz$ = "P" THEN
+SUB tytul_menu_nowagra (TempY, TempX) 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON 'ekran tytulowy - submenu "Nowa gra"  , TempY, TempX
+   DO
+      Key$ = UCASE$(INKEY$)
+      DO: _LIMIT 500
+         COLOR 7, 8: LOCATE 17, 31: PRINT "     Nowa gra     " 'tytul tego menu jako nieaktywny "przycisk"
+         koordynaty_kursora Y, X
+         'opcje menu i podswietlanie wskazanej
+         IF Y = 19 AND X > 30 AND X < 49 THEN 'kursor na napisie
+            COLOR 7, 0: LOCATE 19, 31: PRINT "    Tryb pelny    " 'napis w negatywie
+         ELSE
+            COLOR 0, 7: LOCATE 19, 31: PRINT "    Tryb pelny    " 'napis zwykly
+            COLOR 4: LOCATE 19, 40: PRINT "p" 'czerwona litera
+         END IF
+         IF Y = 21 AND X > 30 AND X < 49 THEN 'kursor na napisie
+            COLOR 7, 0: LOCATE 21, 31: PRINT " Tryb uproszczony " 'napis w negatywie
+         ELSE
+            COLOR 0, 7: LOCATE 21, 31: PRINT " Tryb uproszczony " 'napis zwykly
+            COLOR 4: LOCATE 21, 37: PRINT "u" 'czerwona litera
+         END IF
+         IF Y = 23 AND X > 30 AND X < 49 THEN 'kursor na napisie
+            COLOR 7, 0: LOCATE 23, 31: PRINT "      Wstecz      " 'napis w negatywie
+         ELSE
+            COLOR 0, 7: LOCATE 23, 31: PRINT "      Wstecz      " 'napis zwykly
+            COLOR 4: LOCATE 23, 37: PRINT "W" 'czerwona litera
+         END IF
+         'mysz
+         IF Y = 19 AND X > 30 AND X < 49 AND _MOUSEBUTTON(1) THEN
             'gra_tryb_pelny 'TYMCZASOWO WYLACZONE
             EXIT SUB 'po zakonczeniu gry powrot do glownego menu
-        END IF
-        'IF klawisz$ = "U" THEN
-        '    gra_tryb_uproszczony
-        'EXIT SUB
-        'END IF
-        IF klawisz$ = "W" OR klawisz$ = CHR$(27) THEN EXIT SUB
-    LOOP
+         END IF
+         'IF wiersz = 21 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN
+         '    gra_tryb_uproszczony
+         'EXIT SUB
+         'END IF
+         IF Y = 23 AND X > 30 AND X < 49 AND _MOUSEBUTTON(1) THEN 'wstecz
+            TempY = Y: TempX = X 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
+            EXIT SUB
+         END IF
+      LOOP WHILE _MOUSEINPUT
+      'klawiatura
+      IF Key$ = "P" THEN
+         'gra_tryb_pelny 'TYMCZASOWO WYLACZONE
+         EXIT SUB 'po zakonczeniu gry powrot do glownego menu
+      END IF
+      'IF klawisz$ = "U" THEN
+      '    gra_tryb_uproszczony
+      'EXIT SUB
+      'END IF
+      IF Key$ = "W" OR Key$ = CHR$(27) THEN EXIT SUB
+   LOOP
 END SUB
 
-SUB tytul_menu_edytor (tymczasowa_kolumna) 'ekran tytulowy - submenu "Edytor"
-    edytor_pelny_warstwa = 1 'domyslna warstwa edytora
-    DO
-        klawisz$ = UCASE$(INKEY$)
-        DO: _LIMIT 500
-            COLOR 7, 8: LOCATE 17, 31: PRINT "      Edytor      " 'tytul tego menu jako nieaktywny "przycisk"
-            koordynaty_kursora wiersz, kolumna
-            'opcje menu i podswietlanie wskazanej
-            IF wiersz = 19 AND kolumna > 30 AND kolumna < 49 THEN 'kursor na napisie
-                COLOR 7, 0: LOCATE 19, 31: PRINT "    Tryb pelny    " 'napis w negatywie
-            ELSE
-                COLOR 0, 7: LOCATE 19, 31: PRINT "    Tryb pelny    " 'napis zwykly
-                COLOR 4: LOCATE 19, 40: PRINT "p" 'czerwona litera
-            END IF
-            IF wiersz = 21 AND kolumna > 30 AND kolumna < 49 THEN 'kursor na napisie
-                COLOR 7, 0: LOCATE 21, 31: PRINT " Tryb uproszczony " 'napis w negatywie
-            ELSE
-                COLOR 0, 7: LOCATE 21, 31: PRINT " Tryb uproszczony " 'napis zwykly
-                COLOR 4: LOCATE 21, 37: PRINT "u" 'czerwona litera
-            END IF
-            IF wiersz = 23 AND kolumna > 30 AND kolumna < 49 THEN 'kursor na napisie
-                COLOR 7, 0: LOCATE 23, 31: PRINT "      Wstecz      " 'napis w negatywie
-            ELSE
-                COLOR 0, 7: LOCATE 23, 31: PRINT "      Wstecz      " 'napis zwykly
-                COLOR 4: LOCATE 23, 37: PRINT "W" 'czerwona litera
-            END IF
-            'zdarzenia myszy
-            IF wiersz = 19 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN
-                edytor_pelny_uruchamianie_warstwy edytor_pelny_warstwa
-                EXIT SUB 'po zakonczeniu edytora powrot do glownego menu ekranu tytulowego
-            END IF
-            'IF wiersz = 21 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN
-            '    edytor_tryb_uproszczony
-            'EXIT SUB
-            'END IF
-            IF wiersz = 23 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN 'wstecz
-                tymczasowa_kolumna = kolumna
-                EXIT SUB
-            END IF
-        LOOP WHILE _MOUSEINPUT
-        'zdarzenia klawiatury
-        IF klawisz$ = "P" THEN
-            edytor_pelny_uruchamianie_warstwy x
-            EXIT SUB 'po zakonczeniu edytora powrot do ekranu tytulowego
-        END IF
-        'IF klawisz$ = "U" THEN
-        '    edytor_tryb_uproszczony
-        'EXIT SUB
-        'END IF
-        IF klawisz$ = "W" OR klawisz$ = CHR$(27) THEN EXIT SUB
-    LOOP
+SUB tytul_menu_edytor (TempX) 'ekran tytulowy - submenu "Edytor"
+   FullEditLayer = 1 'domyslna warstwa edytora
+   DO
+      Key$ = UCASE$(INKEY$)
+      DO: _LIMIT 500
+         COLOR 7, 8: LOCATE 17, 31: PRINT "      Edytor      " 'tytul tego menu jako nieaktywny "przycisk"
+         koordynaty_kursora Y, X
+         'opcje menu i podswietlanie wskazanej
+         IF Y = 19 AND X > 30 AND X < 49 THEN 'kursor na napisie
+            COLOR 7, 0: LOCATE 19, 31: PRINT "    Tryb pelny    " 'napis w negatywie
+         ELSE
+            COLOR 0, 7: LOCATE 19, 31: PRINT "    Tryb pelny    " 'napis zwykly
+            COLOR 4: LOCATE 19, 40: PRINT "p" 'czerwona litera
+         END IF
+         IF Y = 21 AND X > 30 AND X < 49 THEN 'kursor na napisie
+            COLOR 7, 0: LOCATE 21, 31: PRINT " Tryb uproszczony " 'napis w negatywie
+         ELSE
+            COLOR 0, 7: LOCATE 21, 31: PRINT " Tryb uproszczony " 'napis zwykly
+            COLOR 4: LOCATE 21, 37: PRINT "u" 'czerwona litera
+         END IF
+         IF Y = 23 AND X > 30 AND X < 49 THEN 'kursor na napisie
+            COLOR 7, 0: LOCATE 23, 31: PRINT "      Wstecz      " 'napis w negatywie
+         ELSE
+            COLOR 0, 7: LOCATE 23, 31: PRINT "      Wstecz      " 'napis zwykly
+            COLOR 4: LOCATE 23, 37: PRINT "W" 'czerwona litera
+         END IF
+         'zdarzenia myszy
+         IF Y = 19 AND X > 30 AND X < 49 AND _MOUSEBUTTON(1) THEN
+            edytor_pelny_uruchamianie_warstwy FullEditLayer
+            EXIT SUB 'po zakonczeniu edytora powrot do glownego menu ekranu tytulowego
+         END IF
+         'IF wiersz = 21 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN
+         '    edytor_tryb_uproszczony
+         'EXIT SUB
+         'END IF
+         IF Y = 23 AND X > 30 AND X < 49 AND _MOUSEBUTTON(1) THEN 'wstecz
+            TempX = X
+            EXIT SUB
+         END IF
+      LOOP WHILE _MOUSEINPUT
+      'zdarzenia klawiatury
+      IF Key$ = "P" THEN
+         edytor_pelny_uruchamianie_warstwy X
+         EXIT SUB 'po zakonczeniu edytora powrot do ekranu tytulowego
+      END IF
+      'IF klawisz$ = "U" THEN
+      '    edytor_tryb_uproszczony
+      'EXIT SUB
+      'END IF
+      IF Key$ = "W" OR Key$ = CHR$(27) THEN EXIT SUB
+   LOOP
 END SUB
 '------------------------------------------------------------------------------'
 '                                GRA - TRYB PELNY                              '
 '------------------------------------------------------------------------------'
 SUB gra_tryb_pelny
-    gra_tryb_pelny_sprawdzanie_plikow
-    'WIDTH 80, 25 'zmiana wymiarow okna gry zaleznie od wielkosci zaladowanej mapy
-    DO
-        COLOR 0, 7: LOCATE 1, 1: PRINT "        Pociagi  Sklady  Rozklad  Przebiegi                                     "; 'pierwsza pozycja paska "Plik" juz przerobiona ponizej
-        COLOR 4: LOCATE 1, 6: PRINT "k": LOCATE 1, 9: PRINT "P": LOCATE 1, 18: PRINT "S": LOCATE 1, 26: PRINT "R" 'czerwone litery
-        gra_tryb_pelny_mapa
-        'gra_pelny_pociag
-        'gra_pelny_semafor
-        'gra_pelny_komunikaty
-        klawisz$ = UCASE$(INKEY$)
-        DO: _LIMIT 500
-            koordynaty_kursora wiersz, kolumna
-            'zdarzenia myszy
-            'gorny pasek menu
-            IF wiersz = 1 AND kolumna > 1 AND kolumna < 7 THEN 'kursor na napisie
-                COLOR 7, 0: LOCATE 1, 2: PRINT " Plik " 'napis w negatywie
-            ELSE
-                COLOR 0, 7: LOCATE 1, 2: PRINT " Plik " 'napis zwykly
-                COLOR 4: LOCATE 1, 6: PRINT "N" 'czerwona litera
-            END IF
-            IF kolumna > 1 AND kolumna < 6 AND wiersz = 1 AND _MOUSEBUTTON(1) THEN gra_menu_plik x
-            IF kolumna > 6 AND kolumna < 14 AND wiersz = 1 AND _MOUSEBUTTON(1) THEN gra_tryb_pelny_okno_pociagi
-        LOOP WHILE _MOUSEINPUT
-        'klawiatura
-        IF klawisz$ = "K" THEN gra_menu_plik x
-        IF x = 1 THEN EXIT SUB 'przy kliknieciu w menu opcji "Koniec" ustawiana jest zmienna x, ktora wychodzi z TEJ petli
-        IF klawisz$ = "P" THEN gra_tryb_pelny_okno_pociagi
-    LOOP
+   gra_tryb_pelny_sprawdzanie_plikow
+   'WIDTH 80, 25 'zmiana wymiarow okna gry zaleznie od wielkosci zaladowanej mapy
+   DO
+      COLOR 0, 7: LOCATE 1, 1: PRINT "        Pociagi  Sklady  Rozklad  Przebiegi                                     "; 'pierwsza pozycja paska "Plik" juz przerobiona ponizej
+      COLOR 4: LOCATE 1, 6: PRINT "k": LOCATE 1, 9: PRINT "P": LOCATE 1, 18: PRINT "S": LOCATE 1, 26: PRINT "R" 'czerwone litery
+      gra_tryb_pelny_mapa
+      'gra_pelny_pociag
+      'gra_pelny_semafor
+      'gra_pelny_komunikaty
+      Key$ = UCASE$(INKEY$)
+      DO: _LIMIT 500
+         koordynaty_kursora Y, X
+         'zdarzenia myszy
+         'gorny pasek menu
+         IF Y = 1 AND X > 1 AND X < 7 THEN 'kursor na napisie
+            COLOR 7, 0: LOCATE 1, 2: PRINT " Plik " 'napis w negatywie
+         ELSE
+            COLOR 0, 7: LOCATE 1, 2: PRINT " Plik " 'napis zwykly
+            COLOR 4: LOCATE 1, 6: PRINT "N" 'czerwona litera
+         END IF
+         IF X > 1 AND X < 6 AND Y = 1 AND _MOUSEBUTTON(1) THEN gra_menu_plik TempVar
+         IF X > 6 AND X < 14 AND Y = 1 AND _MOUSEBUTTON(1) THEN gra_tryb_pelny_okno_pociagi
+      LOOP WHILE _MOUSEINPUT
+      'klawiatura
+      IF Key$ = "K" THEN gra_menu_plik TempVar
+      IF TempVar = 1 THEN EXIT SUB 'przy kliknieciu w menu opcji "Koniec" ustawiana jest zmienna TempVar, ktora wychodzi z TEJ petli
+      IF Key$ = "P" THEN gra_tryb_pelny_okno_pociagi
+   LOOP
 END SUB
 
 SUB gra_tryb_pelny_sprawdzanie_plikow
-    CLS , 0
-    CHDIR "D:\Gry\transportowe\Stacja\tryb pelny\Przykladowa Stacja" 'wejdz do folderu danej stacji
-    IF _FILEEXISTS("mapa.txt") THEN
-        COLOR 10, 0: LOCATE 1, 1: PRINT "Plik mapy istnieje."
-    ELSE
-        COLOR 12, 0: LOCATE 1, 1: PRINT "Plik mapy nie istnieje."
-    END IF
-    SLEEP 1
+   CLS , 0
+   CHDIR "D:\Gry\transportowe\Stacja\tryb pelny\Przykladowa Stacja" 'wejdz do folderu danej stacji
+   IF _FILEEXISTS("mapa.txt") THEN
+      COLOR 10, 0: LOCATE 1, 1: PRINT "Plik mapy istnieje."
+   ELSE
+      COLOR 12, 0: LOCATE 1, 1: PRINT "Plik mapy nie istnieje."
+   END IF
+   SLEEP 1
 END SUB
 
-SUB gra_menu_plik (x)
-    x = 0 ' zmienna potrzebna do zakonczenia gry po wybraniu opcji "Koniec"
-    ramka_wiersz_poczatku = 2
-    ramka_kolumna_poczatku = 1
-    ramka_liczba_wierszy = 4
-    ramka_dlugosc_tekstu = 8
-    ramka_kolor_znakow = 0: ramka_kolor_tla = 7
-    ramka_gora$ = CHR$(196): ramka_dol$ = CHR$(196): ramka_boki$ = CHR$(179)
-    rysuj_ramke ramka_wiersz_poczatku, ramka_kolumna_poczatku, ramka_liczba_wierszy, ramka_dlugosc_tekstu, ramka_kolor_znakow, ramka_kolor_tla, ramka_gora$, ramka_dol$, ramka_boki$
-    COLOR 7, 0: LOCATE 1, 2: PRINT " Plik " 'odwroc kolory w nazwie otwartego menu
-    'petla obslugi klawiatury i myszy - wybor opcji lub zamkniecie menu
-    DO
-        klawisz$ = UCASE$(INKEY$)
-        DO: _LIMIT 500
-            koordynaty_kursora wiersz, kolumna
-            'opcje menu i podswietlanie wskazanej
-            IF wiersz = 3 AND kolumna > 1 AND kolumna < 12 THEN 'kursor na napisie
-                COLOR 7, 0: LOCATE 3, 2: PRINT " Nowa gra " 'napis w negatywie
-            ELSE
-                COLOR 0, 7: LOCATE 3, 2: PRINT " Nowa gra " 'napis zwykly
-                COLOR 4: LOCATE 3, 3: PRINT "N" 'czerwona litera
-            END IF
-            IF wiersz = 4 AND kolumna > 1 AND kolumna < 12 THEN 'kursor na napisie
-                COLOR 7, 0: LOCATE 4, 2: PRINT " Zapisz   " 'napis w negatywie
-            ELSE
-                COLOR 0, 7: LOCATE 4, 2: PRINT " Zapisz   " 'napis zwykly
-                COLOR 4: LOCATE 4, 3: PRINT "Z" 'czerwona litera
-            END IF
-            IF wiersz = 5 AND kolumna > 1 AND kolumna < 12 THEN 'kursor na napisie
-                COLOR 7, 0: LOCATE 5, 2: PRINT " Wczytaj  " 'napis w negatywie
-            ELSE
-                COLOR 0, 7: LOCATE 5, 2: PRINT " Wczytaj  " 'napis zwykly
-                COLOR 4: LOCATE 5, 3: PRINT "W" 'czerwona litera
-            END IF
-            IF wiersz = 6 AND kolumna > 1 AND kolumna < 12 THEN 'kursor na napisie
-                COLOR 7, 0: LOCATE 6, 2: PRINT " Koniec   " 'napis w negatywie
-            ELSE
-                COLOR 0, 7: LOCATE 6, 2: PRINT " Koniec   " 'napis zwykly
-                COLOR 4: LOCATE 6, 3: PRINT "K" 'czerwona litera
-            END IF
-            'zdarzenia myszy
-            IF (kolumna > ramka_kolumna_poczatku + ramka_dlugosc_tekstu + 3 OR wiersz > ramka_wiersz_poczatku + ramka_liczba_wierszy + 1) AND _MOUSEBUTTON(1) THEN 'klikniecie poza menu
-                CLS , 0
-                EXIT SUB
-            END IF
-            IF wiersz = 6 AND kolumna > 1 AND kolumna < 12 AND _MOUSEBUTTON(1) THEN 'koniec
-                x = 1 'po zakonczeniu tej procedury wyjdzie z gry do ekranu tytulowego
-                EXIT SUB
-            END IF
-        LOOP WHILE _MOUSEINPUT
-        'zdarzenia klawiatury
-        IF klawisz$ = "K" THEN
+SUB gra_menu_plik (TempVar)
+   TempVar = 0 ' zmienna potrzebna do zakonczenia gry po wybraniu opcji "Koniec"
+   FramePosY = 2
+   FramePosX = 1
+   FrameLineCount = 4
+   FrameTxtLength = 8
+   FrameCharColor = 0: FrameBackColor = 7
+   FrameTop$ = CHR$(196): FrameBottom$ = CHR$(196): FrameSide$ = CHR$(179)
+   rysuj_ramke FramePosY, FramePosX, FrameLineCount, FrameTxtLength, FrameCharColor, FrameBackColor, FrameTop$, FrameBottom$, FrameSide$
+   COLOR 7, 0: LOCATE 1, 2: PRINT " Plik " 'odwroc kolory w nazwie otwartego menu
+   'petla obslugi klawiatury i myszy - wybor opcji lub zamkniecie menu
+   DO
+      Key$ = UCASE$(INKEY$)
+      DO: _LIMIT 500
+         koordynaty_kursora Y, x
+         'opcje menu i podswietlanie wskazanej
+         IF Y = 3 AND x > 1 AND x < 12 THEN 'kursor na napisie
+            COLOR 7, 0: LOCATE 3, 2: PRINT " Nowa gra " 'napis w negatywie
+         ELSE
+            COLOR 0, 7: LOCATE 3, 2: PRINT " Nowa gra " 'napis zwykly
+            COLOR 4: LOCATE 3, 3: PRINT "N" 'czerwona litera
+         END IF
+         IF Y = 4 AND x > 1 AND x < 12 THEN 'kursor na napisie
+            COLOR 7, 0: LOCATE 4, 2: PRINT " Zapisz   " 'napis w negatywie
+         ELSE
+            COLOR 0, 7: LOCATE 4, 2: PRINT " Zapisz   " 'napis zwykly
+            COLOR 4: LOCATE 4, 3: PRINT "Z" 'czerwona litera
+         END IF
+         IF Y = 5 AND x > 1 AND x < 12 THEN 'kursor na napisie
+            COLOR 7, 0: LOCATE 5, 2: PRINT " Wczytaj  " 'napis w negatywie
+         ELSE
+            COLOR 0, 7: LOCATE 5, 2: PRINT " Wczytaj  " 'napis zwykly
+            COLOR 4: LOCATE 5, 3: PRINT "W" 'czerwona litera
+         END IF
+         IF Y = 6 AND x > 1 AND x < 12 THEN 'kursor na napisie
+            COLOR 7, 0: LOCATE 6, 2: PRINT " Koniec   " 'napis w negatywie
+         ELSE
+            COLOR 0, 7: LOCATE 6, 2: PRINT " Koniec   " 'napis zwykly
+            COLOR 4: LOCATE 6, 3: PRINT "K" 'czerwona litera
+         END IF
+         'zdarzenia myszy
+         IF (x > FramePosX + FrameTxtLength + 3 OR Y > FramePosY + FrameLineCount + 1) AND _MOUSEBUTTON(1) THEN 'klikniecie poza menu
+            CLS , 0
+            EXIT SUB
+         END IF
+         IF Y = 6 AND x > 1 AND x < 12 AND _MOUSEBUTTON(1) THEN 'koniec
             x = 1 'po zakonczeniu tej procedury wyjdzie z gry do ekranu tytulowego
             EXIT SUB
-        END IF
-        IF klawisz$ = CHR$(27) THEN
-            CLS , 0
-            EXIT SUB 'zamkniecie menu
-        END IF
-    LOOP
+         END IF
+      LOOP WHILE _MOUSEINPUT
+      'zdarzenia klawiatury
+      IF Key$ = "K" THEN
+         x = 1 'po zakonczeniu tej procedury wyjdzie z gry do ekranu tytulowego
+         EXIT SUB
+      END IF
+      IF Key$ = CHR$(27) THEN
+         CLS , 0
+         EXIT SUB 'zamkniecie menu
+      END IF
+   LOOP
 END SUB
 
 SUB gra_tryb_pelny_okno_pociagi
-    ramka_wiersz_poczatku = 3
-    ramka_kolumna_poczatku = 7
-    ramka_liczba_wierszy = 1
-    ramka_dlugosc_tekstu = 7
-    ramka_kolor_znakow = 0: ramka_kolor_tla = 7
-    ramka_gora$ = CHR$(205): ramka_dol$ = CHR$(196): ramka_boki$ = CHR$(179)
-    rysuj_ramke ramka_wiersz_poczatku, ramka_kolumna_poczatku, ramka_liczba_wierszy, ramka_dlugosc_tekstu, ramka_kolor_znakow, ramka_kolor_tla, ramka_gora$, ramka_dol$, ramka_boki$
-    COLOR 7, 0: LOCATE 1, 8: PRINT " Pociagi " 'odwroc kolory w nazwie otwartego okna
-    'zawartosc okna
-    COLOR 0, 7: LOCATE ramka_wiersz_poczatku + 1, ramka_kolumna_poczatku + 2: PRINT "Pociagi "
-    'petla obslugi klawiatury i myszy - wybor opcji lub zamkniecie okna
-    DO
-        klawisz$ = UCASE$(INKEY$)
-        DO: _LIMIT 500
-            koordynaty_kursora wiersz, kolumna
-            IF wiersz = ramka_wiersz_poczatku AND kolumna = ramka_kolumna_poczatku + ramka_dlugosc_tekstu + 2 THEN 'kursor na przycisku
-                COLOR 7, 0: LOCATE ramka_wiersz_poczatku, ramka_kolumna_poczatku + ramka_dlugosc_tekstu + 2: PRINT "X" 'przycisk w negatywie
-            ELSE
-                COLOR 4, 7: LOCATE ramka_wiersz_poczatku, ramka_kolumna_poczatku + ramka_dlugosc_tekstu + 2: PRINT "X" 'czerwona litera
-            END IF
-            'klikniecie przycisku zamkniecia
-            IF wiersz = ramka_wiersz_poczatku AND kolumna = ramka_kolumna_poczatku + ramka_dlugosc_tekstu + 2 AND _MOUSEBUTTON(1) THEN
-                EXIT SUB
-            END IF
-            'klikniecie poza oknem
-            IF (wiersz < ramka_wiersz_poczatku OR wiersz > ramka_wiersz_poczatku + ramka_liczba_wierszy + 1 OR kolumna < ramka_kolumna_poczatku OR kolumna > ramka_kolumna_poczatku + ramka_dlugosc_tekstu + 3) AND _MOUSEBUTTON(1) THEN
-                EXIT SUB
-            END IF
-        LOOP WHILE _MOUSEINPUT
-        'zdarzenia klawiatury
-        IF klawisz$ = "X" OR klawisz$ = CHR$(27) THEN
+   FramePosY = 3
+   FramePosX = 7
+   FrameLineCount = 1
+   FrameTxtLength = 7
+   FrameCharColor = 0: FrameBackColor = 7
+   FrameTop$ = CHR$(205): FrameBottom$ = CHR$(196): FrameSide$ = CHR$(179)
+   rysuj_ramke FramePosY, FramePosX, FrameLineCount, FrameTxtLength, FrameCharColor, FrameBackColor, FrameTop$, FrameBottom$, FrameSide$
+   COLOR 7, 0: LOCATE 1, 8: PRINT " Pociagi " 'odwroc kolory w nazwie otwartego okna
+   'zawartosc okna
+   COLOR 0, 7: LOCATE FramePosY + 1, FramePosX + 2: PRINT "Pociagi "
+   'petla obslugi klawiatury i myszy - wybor opcji lub zamkniecie okna
+   DO
+      Key$ = UCASE$(INKEY$)
+      DO: _LIMIT 500
+         koordynaty_kursora Y, X
+         IF Y = FramePosY AND X = FramePosX + FrameTxtLength + 2 THEN 'kursor na przycisku
+            COLOR 7, 0: LOCATE FramePosY, FramePosX + FrameTxtLength + 2: PRINT "X" 'przycisk w negatywie
+         ELSE
+            COLOR 4, 7: LOCATE FramePosY, FramePosX + FrameTxtLength + 2: PRINT "X" 'czerwona litera
+         END IF
+         'klikniecie przycisku zamkniecia
+         IF Y = FramePosY AND X = FramePosX + FrameTxtLength + 2 AND _MOUSEBUTTON(1) THEN
             EXIT SUB
-        END IF
-    LOOP
+         END IF
+         'klikniecie poza oknem
+         IF (Y < FramePosY OR Y > FramePosY + FrameLineCount + 1 OR X < FramePosX OR X > FramePosX + FrameTxtLength + 3) AND _MOUSEBUTTON(1) THEN
+            EXIT SUB
+         END IF
+      LOOP WHILE _MOUSEINPUT
+      'zdarzenia klawiatury
+      IF Key$ = "X" OR Key$ = CHR$(27) THEN
+         EXIT SUB
+      END IF
+   LOOP
 END SUB
 
 SUB gra_tryb_pelny_mapa
-    wiersz_poczatku_mapy = 10 'koordynaty lewego gornego rogu mapy
-    kolumna_poczatku_mapy = 1
-    'zmiana wymiarow okna
-    'wczytanie mapy z pliku
-    OPEN "mapa.txt" FOR INPUT AS #1
-    COLOR 7, 0
-    DO WHILE NOT EOF(1)
-        '(przeniesc do taboru i elementow mapy) INPUT #1, nr_rek, klr_txt, klr_tlo, elem_map$, typ_elem$ 'nr_rekordu, kolor_tekstu, kolor_tla, element_mapy, typ_elementu (tor, semafor, rozjazd itd.)
-        INPUT #1, nr_rekordu, wiersz_mapy, kolumna_mapy, tresc_mapy$
-        LOCATE wiersz_mapy + wiersz_poczatku_mapy - 1, kolumna_mapy + kolumna_poczatku_mapy - 1: PRINT tresc_mapy$
-        '(przeniesc do taboru i elementow mapy) COLOR klr_txt, klr_tlo: LOCATE wiersz_mapy, 1: PRINT elem_map$
-    LOOP
-    CLOSE #1
+   MapPosX = 1: MapPosY = 10 'koordynaty lewego gornego rogu mapy
+   'zmiana wymiarow okna
+   'wczytanie mapy z pliku
+   OPEN "mapa.txt" FOR INPUT AS #1
+   COLOR 7, 0
+   DO WHILE NOT EOF(1)
+      '(przeniesc do taboru i elementow mapy) INPUT #1, nr_rek, klr_txt, klr_tlo, elem_map$, typ_elem$ 'nr_rekordu, kolor_tekstu, kolor_tla, element_mapy, typ_elementu (tor, semafor, rozjazd itd.)
+      INPUT #1, RecNr, MapY, MapX, tresc_mapy$
+      LOCATE MapY + MapPosY - 1, MapX + MapPosX - 1: PRINT tresc_mapy$ 'rysowanie torow
+      '(przeniesc do taboru i elementow mapy) COLOR klr_txt, klr_tlo: LOCATE wiersz_mapy, 1: PRINT elem_map$
+   LOOP
+   CLOSE #1
 END SUB
 '------------------------------------------------------------------------------'
 '                            GRA - TRYB UPROSZCZONY                            '
@@ -316,179 +315,211 @@ END SUB
 '                            EDYTOR MAP - TRYB PELNY                           '
 '------------------------------------------------------------------------------'
 '''''''''''''''''''''''''' edytor map - wybor warstwy ''''''''''''''''''''''''''
-SUB edytor_pelny_uruchamianie_warstwy (edytor_pelny_warstwa)
-    CLS , 0
-    'AUTOMATYCZNY WYBOR WARSTWY NA PODSTAWIE ZMIENNEJ
-    IF edytor_pelny_warstwa = 1 THEN 'mapa
-        edytor_pelny_mapa x
-    END IF
-    IF edytor_pelny_warstwa = 2 THEN 'oznaczanie torow
-        edytor_pelny_tory
-    END IF
-    IF edytor_pelny_warstwa = 3 THEN 'oznaczanie rozjazdow
-        'edytor_pelny_rozjazdy
-    END IF
-    IF edytor_pelny_warstwa = 4 THEN 'oznaczanie sygnalizatorow
-        'edytor_pelny_sygnalizatory
-    END IF
+SUB edytor_pelny_uruchamianie_warstwy (FullEditLayer)
+   CLS , 0
+   'AUTOMATYCZNY WYBOR WARSTWY NA PODSTAWIE ZMIENNEJ
+   IF FullEditLayer = 1 THEN 'mapa
+      edytor_pelny_mapa TempVar
+   END IF
+   IF FullEditLayer = 2 THEN 'oznaczanie torow
+      edytor_pelny_tory
+   END IF
+   IF FullEditLayer = 3 THEN 'oznaczanie rozjazdow
+      'edytor_pelny_rozjazdy
+   END IF
+   IF FullEditLayer = 4 THEN 'oznaczanie sygnalizatorow
+      'edytor_pelny_sygnalizatory
+   END IF
 
-    'KONIEC -  AUTOMATYCZNY WYBOR WARSTWY NA PODSTAWIE ZMIENNEJ
-    IF x = 1 THEN EXIT SUB 'przy kliknieciu w menu opcji "Koniec" ustawiana jest zmienna x, ktora wychodzi z TEJ petli
+   'KONIEC -  AUTOMATYCZNY WYBOR WARSTWY NA PODSTAWIE ZMIENNEJ
+   IF TempVar = 1 THEN EXIT SUB 'przy kliknieciu w menu opcji "Koniec" ustawiana jest zmienna x, ktora wychodzi z TEJ petli
 END SUB
 '------------------------------------------------------------------------------'
 '                 EDYTOR MAP - TRYB PELNY - WARSTWA MAPY                       '
 '------------------------------------------------------------------------------'
 'wybor edytora - nowa mapa lub istniejaca
-SUB edytor_pelny_mapa (x) '1. warstwa - rysowanie schematu torow
-    CLS , 1
-    'edytor_tryb_pelny_sprawdzanie_plikow
-    wysokosc_mapy = 25: szerokosc_mapy = 50 'domyslne wymiary nowej mapy
-    kolor_znaku = 15: kolor_tla = 0 'domyslne kolory: bialy i czarny
-    DO
-        wiersz_poczatku_mapy = 2: kolumna_poczatku_mapy = 2 'koordynaty poczatku mapy
-        klawisz$ = UCASE$(INKEY$)
-        DO: _LIMIT 500
-            rysuj_ramke 2, 1, 23, 65, 0, 3, CHR$(205), CHR$(205), CHR$(186) 'ramka mapy
-            koordynaty_kursora wiersz, kolumna
-            'obliczanie pozycji kursora na mapie
-            wiersz_mapy = wiersz - wiersz_poczatku_mapy
-            kolumna_mapy = kolumna + kolumna_poczatku_mapy - 3
-            'wyswietlanie pozycji kursora na mapie
-            wiersz_mapy_wyswietlany = wiersz_mapy
-            kolumna_mapy_wyswietlana = kolumna_mapy
-            IF wiersz_mapy < 1 THEN wiersz_mapy_wyswietlany = 1
-            IF wiersz_mapy > 25 THEN wiersz_mapy_wyswietlany = 25
-            IF kolumna_mapy < 1 THEN kolumna_mapy_wyswietlana = 1
-            IF kolumna_mapy > 68 THEN kolumna_mapy_wyswietlana = 60
-            COLOR 0, 7: LOCATE 2, 3: PRINT " wiersz:   ": LOCATE 2, 11: PRINT wiersz_mapy_wyswietlany;
-            LOCATE 2, 14: PRINT ", kolumna:    ": LOCATE 2, 24: PRINT kolumna_mapy_wyswietlana;
-            'zdarzenia myszy
-            COLOR 7, 0 'przyciski do zmiany wielkosci mapy
-            LOCATE 2, 36: PRINT CHR$(17): LOCATE 2, 41: PRINT CHR$(16); 'szerokosc mapy
-            LOCATE 2, 43: PRINT CHR$(31): LOCATE 2, 48: PRINT CHR$(30); 'wysokosc mapy
-            'wprowadzenie wartosci liczbowych
-            IF wiersz = 2 AND kolumna = 36 AND _MOUSEBUTTON(1) THEN szerokosc_mapy = szerokosc_mapy - 1 'strzalka w lewo
-            IF wiersz = 2 AND kolumna = 41 AND _MOUSEBUTTON(1) THEN szerokosc_mapy = szerokosc_mapy + 1 'strzalka w prawo
-            IF wiersz = 2 AND kolumna = 43 AND _MOUSEBUTTON(1) THEN wysokosc_mapy = wysokosc_mapy - 1 'strzalka w dol
-            IF wiersz = 2 AND kolumna = 48 AND _MOUSEBUTTON(1) THEN wysokosc_mapy = wysokosc_mapy + 1 'strzalka w gore
-            COLOR 7, 0: LOCATE 2, 37: PRINT szerokosc_mapy: LOCATE 2, 44: PRINT wysokosc_mapy; 'wyswietlanie wymiarow
-            'pasek menu
-            COLOR 0, 7: LOCATE 1, 1: PRINT "        Warstwy  Instrukcja  Slownik                                            ";
-            COLOR 4: LOCATE 1, 6: PRINT "k"; 'czerwone litery
-            LOCATE 1, 9: PRINT "W";
-            'pasek menu z hooverem
-            IF wiersz = 1 AND kolumna > 1 AND kolumna < 7 THEN 'kursor na napisie
-                COLOR 7, 0: LOCATE 1, 2: PRINT " Plik " 'napis w negatywie
-            ELSE
-                COLOR 0, 7: LOCATE 1, 2: PRINT " Plik " 'napis zwykly
-                COLOR 4: LOCATE 1, 3: PRINT "P" 'czerwona litera
+SUB edytor_pelny_mapa (TempVar) '1. warstwa - rysowanie schematu torow
+   CLS , 1
+   'edytor_tryb_pelny_sprawdzanie_plikow
+   MapHeight = 25: MapWidth = 50 'domyslne wymiary nowej mapy
+   CharColor = 15: BackColor = 0 'domyslne kolory: bialy i czarny
+   DO
+      MapPosY = 2: MapPosX = 2 'koordynaty poczatku mapy
+      Key$ = UCASE$(INKEY$)
+      DO: _LIMIT 500
+         rysuj_ramke 2, 1, 23, 65, 0, 3, CHR$(205), CHR$(205), CHR$(186) 'ramka mapy
+         koordynaty_kursora Y, X
+         'obliczanie pozycji kursora na mapie
+         MapY = Y - MapPosY
+         MapX = X + MapPosX - 3
+         'wyswietlanie pozycji kursora na mapie
+         MapYCapped = MapY 'pokazuj rzeczywista pozycje
+         MapXCapped = MapX
+         IF MapY < 1 THEN MapYCapped = 1 'ograniczenie w sytuacji wyjechania kursorem poza mape
+         IF MapY > 25 THEN MapYCapped = 25
+         IF MapX < 1 THEN MapXCapped = 1
+         IF MapX > 68 THEN MapXCapped = 60
+         COLOR 0, 7: LOCATE 2, 3: PRINT " wiersz:   ": LOCATE 2, 11: PRINT wiersz_mapy_wyswietlany;
+         LOCATE 2, 14: PRINT ", kolumna:    ": LOCATE 2, 24: PRINT kolumna_mapy_wyswietlana;
+         'zdarzenia myszy
+         COLOR 7, 0 'przyciski do zmiany wielkosci mapy
+         LOCATE 2, 36: PRINT CHR$(17): LOCATE 2, 41: PRINT CHR$(16); 'szerokosc mapy
+         LOCATE 2, 43: PRINT CHR$(31): LOCATE 2, 48: PRINT CHR$(30); 'wysokosc mapy
+         'wprowadzenie wartosci liczbowych do zmiany wielkosci mapy
+         IF Y = 2 AND X = 36 AND _MOUSEBUTTON(1) THEN MapWidth = MapWidth - 1 'strzalka w lewo
+         IF Y = 2 AND X = 41 AND _MOUSEBUTTON(1) THEN MapWidth = MapWidth + 1 'strzalka w prawo
+         IF Y = 2 AND X = 43 AND _MOUSEBUTTON(1) THEN MapHeight = MapHeight - 1 'strzalka w dol
+         IF Y = 2 AND X = 48 AND _MOUSEBUTTON(1) THEN MapHeight = MapHeight + 1 'strzalka w gore
+         COLOR 7, 0: LOCATE 2, 37: PRINT MapWidth: LOCATE 2, 44: PRINT MapHeight; 'wyswietlanie wymiarow
+         'pasek menu
+         COLOR 0, 7: LOCATE 1, 1: PRINT "  Plik  Warstwy  Instrukcja  Slownik                                            ";
+         'pasek menu z hooverem
+         IF Y = 1 AND X > 1 AND X < 8 THEN 'kursor na napisie
+            COLOR 7, 0: LOCATE 1, 2: PRINT " Plik " 'napis w negatywie
+            IF _MOUSEBUTTON(1) THEN
+               TempY = Y: TempX = X 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
+               edytor_menu_plik TempY, TempX, TempVar
+               CLS , 1
             END IF
-            'nacisniecia przyciskow paska menu
-            IF wiersz = 1 AND _MOUSEBUTTON(1) THEN
-                IF kolumna > 1 AND kolumna < 6 THEN edytor_menu_plik tymczasowy_wiersz, tymczasowa_kolumna, x
-                IF kolumna > 7 AND kolumna < 17 THEN edytor_pelny_menu_wybor_warstwy tymczasowy_wiersz, tymczasowa_kolumna, edytor_pelny_warstwa
-                CLS , 1
+         ELSE
+            COLOR 0, 7: LOCATE 1, 2: PRINT " Plik " 'napis zwykly
+            COLOR 4: LOCATE 1, 3: PRINT "P" 'czerwona litera
+         END IF
+         IF Y = 1 AND X > 7 AND X < 17 THEN 'kursor na napisie
+            COLOR 7, 0: LOCATE 1, 8: PRINT " Warstwy " 'napis w negatywie
+            IF _MOUSEBUTTON(1) THEN
+               TempY = Y: TempX = X 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
+               edytor_pelny_menu_wybor_warstwy TempY, TempX, FullEditLayer
+               CLS , 1
             END IF
-            'edytor_pelny_menu_warstwa
-            'okno mapy - etykieta koordynat kursora
-            IF wiersz = 2 AND kolumna > 3 AND kolumna < 27 THEN
-                etykieta_mapa_koordynaty 'PRZEROBIC NA WSPOLNA PROCEDURE DLA WSZYSTKICH ETYKIET
-                'ramka_wiersz_poczatku, ramka_kolumna_poczatku, ramka_liczba_wierszy, ramka_dlugosc_tekstu, etykieta_wiersz_1$
-                CLS , 1
-            END IF
-            spluczka
-            edytor_pelny_tabela_mapa_wyswietlanie 'rysuje ponownie mape
-            edytor_pelny_torowisko wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna, znak$, kolor_znaku 'wyswietlanie tablicy znakow i ladowanie znaku do zmiennej 'znak$'
-            IF wiersz > 2 AND wiersz < 26 AND kolumna > 1 AND kolumna < 69 AND _MOUSEBUTTON(1) AND znak$ <> "" AND (wiersz <> tymczasowy_wiersz OR kolumna <> tymczasowa_kolumna) THEN 'klikniecie w ramce mapy
-                tymczasowy_wiersz = wiersz: tymczasowa_kolumna = kolumna 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
-                '1. WPISYWANIE DO TABELI
-                IF znak$ <> "X" THEN 'znak nie jest X
-                    IF liczba_rekordow_tabeli_mapy = UBOUND(tabela_mapa) THEN 'jezeli do tabeli juz cos wpisano:
-                        FOR i = 1 TO UBOUND(tabela_mapa) 'przeszukaj tabele
-                            IF wiersz_mapy = tabela_mapa(i).wiersz_znaku AND kolumna_mapy = tabela_mapa(i).kolumna_znaku THEN 'jesli istnieje juz wpis o tych wspolrzednych
-                                nr_rekordu = i
-                                edytor_pelny_tabela_mapa_usuwanie
-                                EXIT FOR 'po jednym wykonaniu procedury usuwania opuszcza petle wyszukiwania
-                            END IF
-                        NEXT i 'koniec przeszukiwania tabeli pod katem wpisu o tych samych koordynatach
-                        IF tabela_mapa(1).wiersz_znaku <> 0 THEN 'jesli pierwszy wiersz tabeli nie zawiera wpisu 0,0,0,0
-                            REDIM _PRESERVE tabela_mapa(1 TO UBOUND(tabela_mapa) + 1) AS typ_tabela_mapa 'powieksz tabele tworzac nowy, pusty rekord
-                        ELSE
-                            nr_rekordu = UBOUND(tabela_mapa) 'pierwszy rekord zawiera zera wiec nadpisac go
-                        END IF
-                    END IF
-                    nr_rekordu = UBOUND(tabela_mapa) 'przenosi miejsce wpisania nowego rekordu na koniec tabeli
-                    IF ASC(znak$) <> 0 THEN
-                        tabela_mapa(nr_rekordu).wiersz_znaku = wiersz_mapy
-                        tabela_mapa(nr_rekordu).kolumna_znaku = kolumna_mapy
-                        tabela_mapa(nr_rekordu).kolor_znaku = kolor_znaku
-                        tabela_mapa(nr_rekordu).znak_kod = ASC(znak$)
-                        liczba_rekordow_tabeli_mapy = liczba_rekordow_tabeli_mapy + 1 'aktualizuj liczbe rekordow
-                    END IF
-                    '2. USUWANIE Z TABELI
-                ELSE 'znak jest X o wspolrzednych wiersz_mapy, kolumna_mapy AND liczba_rekordow_tabeli_mapy > 0   AND liczba_rekordow_tabeli_mapy = UBOUND(tabela_mapa)
-                    'pobranie do zmiennej nr_rekordu numeru wpisu o wspolrzednych wiersz_mapy i kolumna_mapy
-                    FOR i = 1 TO UBOUND(tabela_mapa) 'wyszkuje w tabeli rekord o podanych wspolrzednych
-                        IF wiersz_mapy = tabela_mapa(i).wiersz_znaku AND kolumna_mapy = tabela_mapa(i).kolumna_znaku THEN
-                            nr_rekordu = i
-                            edytor_pelny_tabela_mapa_usuwanie
-                            COLOR , 1: LOCATE wiersz, kolumna: PRINT " "; 'czysci znak z podgladu mapy
-                            EXIT FOR 'po jednym wykonaniu procedury usuwania opuszcza petle wyszukiwania
-                        END IF
-                    NEXT i
-                END IF
-                IF UBOUND(tabela_mapa) = 0 THEN REDIM _PRESERVE tabela_mapa(1 TO UBOUND(tabela_mapa) + 1) AS typ_tabela_mapa 'jesli tabela zostala wyczyszczona to utworz nowy, pusty rekord
-                edytor_pelny_tabela_mapa_wyswietlanie '3. WYSWIETLANIE ZAWARTOSCI TABELI W RAMCE MAPY
-                '4. AUTOZAPIS TABELI DO PLIKU TYMCZASOWEGO
-                OPEN folder_gry$ + "tryb pelny\Przykladowa Stacja\nowa_mapa.txt" FOR OUTPUT AS #1
-                FOR nr_rekordu = 1 TO UBOUND(tabela_mapa)
-                    WRITE #1, tabela_mapa(nr_rekordu).wiersz_znaku, tabela_mapa(nr_rekordu).kolumna_znaku, tabela_mapa(nr_rekordu).kolor_znaku, tabela_mapa(nr_rekordu).znak_kod
-                NEXT nr_rekordu
-                CLOSE #1
-            END IF
-            pasek_informacyjny pasek_informacyjny_tresc
-        LOOP WHILE _MOUSEINPUT
-        'zdarzenia klawiatury
-        IF klawisz$ = "K" THEN edytor_menu_plik tymczasowy_wiersz, tymczasowa_kolumna, x 'procedura menu zwraca zmienna x
-        IF x = 1 THEN
+         ELSE
+            COLOR 0, 7: LOCATE 1, 8: PRINT " Warstwy " 'napis zwykly
+            COLOR 4: LOCATE 1, 9: PRINT "W" 'czerwona litera
+         END IF
+         'edytor_pelny_menu_warstwa
+         'okno mapy - etykieta koordynat kursora
+         IF Y = 2 AND X > 3 AND X < 27 THEN
+            etykieta_mapa_koordynaty 'PRZEROBIC NA WSPOLNA PROCEDURE DLA WSZYSTKICH ETYKIET    'PopUp "koordynaty kursora"
+            'ramka_wiersz_poczatku, ramka_kolumna_poczatku, ramka_liczba_wierszy, ramka_dlugosc_tekstu, etykieta_wiersz_1$
             CLS , 1
-            EXIT SUB 'przy kliknieciu w menu opcji "Koniec" ustawiana jest zmienna x, ktora wychodzi z TEJ petli
-        END IF
-    LOOP
+         END IF
+         spluczka
+         edytor_pelny_MapTable_wyswietlanie 'rysuje ponownie mape
+         edytor_pelny_torowisko Y, X, TempY, TempX, Char$, CharColor 'wyswietlanie tablicy znakow i ladowanie znaku do zmiennej 'znak$'
+         IF Y > 2 AND Y < 26 AND X > 1 AND X < 69 AND _MOUSEBUTTON(1) AND Char$ <> "" AND (Y <> TempY OR X <> TempX) THEN 'klikniecie w ramce mapy
+            TempY = Y: TempX = X 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
+            '1. WPISYWANIE DO TABELI
+            IF Char$ <> "X" THEN 'znak nie jest X
+               IF MapTableRecCount = UBOUND(MapTable) THEN 'jezeli do tabeli juz cos wpisano:
+                  FOR i = 1 TO UBOUND(MapTable) 'przeszukaj tabele
+                     IF MapY = MapTable(i).CharY AND MapX = MapTable(i).CharX THEN 'jesli istnieje juz wpis o tych wspolrzednych
+                        RecNr = i
+                        edytor_pelny_MapTable_usuwanie
+                        EXIT FOR 'po jednym wykonaniu procedury usuwania opuszcza petle wyszukiwania
+                     END IF
+                  NEXT i 'koniec przeszukiwania tabeli pod katem wpisu o tych samych koordynatach
+                  IF MapTable(1).CharY <> 0 THEN 'jesli pierwszy wiersz tabeli nie zawiera wpisu 0,0,0,0
+                     REDIM _PRESERVE MapTable(1 TO UBOUND(MapTable) + 1) AS TypeMapTable 'powieksz tabele tworzac nowy, pusty rekord
+                  ELSE
+                     RecNr = UBOUND(MapTable) 'pierwszy rekord zawiera zera wiec nadpisac go
+                  END IF
+               END IF
+               RecNr = UBOUND(MapTable) 'przenosi miejsce wpisania nowego rekordu na koniec tabeli
+               IF ASC(Char$) <> 0 THEN
+                  MapTable(RecNr).CharY = MapY
+                  MapTable(RecNr).CharX = MapX
+                  MapTable(RecNr).CharColor = CharColor
+                  MapTable(RecNr).CharCode = ASC(Char$)
+                  MapTableRecCount = MapTableRecCount + 1 'aktualizuj liczbe rekordow
+               END IF
+               '2. USUWANIE Z TABELI
+            ELSE 'znak jest X o wspolrzednych wiersz_mapy, kolumna_mapy AND liczba_rekordow_tabeli_mapy > 0   AND liczba_rekordow_tabeli_mapy = UBOUND(tabela_mapa)
+               'pobranie do zmiennej RecNr numeru wpisu o wspolrzednych wiersz_mapy i kolumna_mapy
+               FOR i = 1 TO UBOUND(MapTable) 'wyszkuje w tabeli rekord o podanych wspolrzednych
+                  IF MapY = MapTable(i).CharY AND MapX = MapTable(i).CharX THEN
+                     RecNr = i
+                     edytor_pelny_MapTable_usuwanie
+                     COLOR , 1: LOCATE Y, X: PRINT " "; 'czysci znak z podgladu mapy
+                     EXIT FOR 'po jednym wykonaniu procedury usuwania opuszcza petle wyszukiwania
+                  END IF
+               NEXT i
+            END IF
+            IF UBOUND(MapTable) = 0 THEN REDIM _PRESERVE MapTable(1 TO UBOUND(MapTable) + 1) AS TypeMapTable 'jesli tabela zostala wyczyszczona to utworz nowy, pusty rekord
+            '3. WYSWIETLANIE ZAWARTOSCI TABELI W RAMCE MAPY
+            edytor_pelny_MapTable_wyswietlanie
+            '4. AUTOZAPIS TABELI DO PLIKU TYMCZASOWEGO
+            OPEN GameDir$ + "tryb pelny\Przykladowa Stacja\nowa_mapa.txt" FOR OUTPUT AS #1
+            FOR RecNr = 1 TO UBOUND(MapTable)
+               WRITE #1, MapTable(RecNr).CharY, MapTable(RecNr).CharX, MapTable(RecNr).CharColor, MapTable(RecNr).CharCode
+            NEXT RecNr
+            CLOSE #1
+         END IF
+         'pasek_informacyjny pasek_informacyjny_tresc
+      LOOP WHILE _MOUSEINPUT
+      'zdarzenia klawiatury
+      IF Key$ = "P" THEN edytor_menu_plik TempY, TempX, TempVar 'procedura menu zwraca zmienna x
+      IF TempVar = 1 THEN 'przy kliknieciu w menu opcji "Koniec" ustawiana jest zmienna TempVar, ktora wychodzi z TEJ petli
+         CLS , 1
+         EXIT SUB
+      END IF
+      IF Key$ = "W" THEN edytor_pelny_menu_wybor_warstwy TempY, TempX, FullEditLayer
+   LOOP
 END SUB
 '------------------------------------------------------------------------------'
 '                 EDYTOR MAP - TRYB PELNY - WARSTWA TOROW                      '
 '------------------------------------------------------------------------------'
 SUB edytor_pelny_tory '2. warstwa - oznaczanie parametrow torow na schemacie
-    DO
-        DO: _LIMIT 500
-            rysuj_ramke 2, 1, 23, 65, 0, 3, CHR$(205), CHR$(205), CHR$(186) 'ramka mapy
-            koordynaty_kursora wiersz, kolumna
-            'obliczanie pozycji kursora na mapie
-            wiersz_mapy = wiersz - wiersz_poczatku_mapy
-            kolumna_mapy = kolumna + kolumna_poczatku_mapy - 3
-            'wyswietlanie pozycji kursora na mapie
-            wiersz_mapy_wyswietlany = wiersz_mapy
-            kolumna_mapy_wyswietlana = kolumna_mapy
-            IF wiersz_mapy < 1 THEN wiersz_mapy_wyswietlany = 1
-            IF wiersz_mapy > 25 THEN wiersz_mapy_wyswietlany = 25
-            IF kolumna_mapy < 1 THEN kolumna_mapy_wyswietlana = 1
-            IF kolumna_mapy > 68 THEN kolumna_mapy_wyswietlana = 60
-            COLOR 0, 7: LOCATE 2, 3: PRINT " wiersz:   ": LOCATE 2, 11: PRINT wiersz_mapy_wyswietlany;
-            LOCATE 2, 14: PRINT ", kolumna:    ": LOCATE 2, 24: PRINT kolumna_mapy_wyswietlana;
-            'pasek menu
-            COLOR 0, 7: LOCATE 1, 1: PRINT "  Plik  Warstwy  Instrukcja  Slownik                                            ";
-            COLOR 4: LOCATE 1, 6: PRINT "k"; 'czerwone litery
-            LOCATE 1, 9: PRINT "W";
-            'zdarzenia myszy
-            IF wiersz = 1 AND _MOUSEBUTTON(1) THEN
-                IF kolumna > 1 AND kolumna < 6 THEN edytor_menu_plik tymczasowy_wiersz, tymczasowa_kolumna, x
-                IF kolumna > 7 AND kolumna < 17 THEN edytor_pelny_menu_wybor_warstwy tymczasowy_wiersz, tymczasowa_kolumna, edytor_pelny_warstwa
-                CLS , 1
-            END IF
-        LOOP WHILE _MOUSEINPUT
-        'zdarzenia klawiatury
-    LOOP
+   DO
+      DO: _LIMIT 500
+         FramePosX = 1: FramePosY = 2 'polozenie poczatku ramki
+         FrameLineCount = 23: FrameTxtLength = 65 'wymiary wnetrza ramki
+         FrameCharColor = 0: FrameBackColor = 3 'kolory ramki
+         FrameTop$ = CHR$(205)
+         FrameBottom$ = CHR$(205)
+         FrameSide$ = CHR$(186)
+         rysuj_ramke FramePosY, FramePosX, FrameLineCount, FrameTxtLength, FrameCharColor, FrameBackColor, FrameTop$, FrameBottom$, FrameSide$ 'ramka mapy
+         koordynaty_kursora Y, X
+         'obliczanie pozycji kursora na mapie
+         MapY = Y - MapPosY
+         MapX = X + MapPosX - 3 'GDZIE JEST OBLICZANE WIERSZ/KOLUMNA_POCZATKU_MAPY?
+         'wyswietlanie pozycji kursora na mapie
+         MapYCapped = MapY
+         MapXCapped = MapX
+         IF MapY < 1 THEN MapYCapped = 1
+         IF MapY > 25 THEN MapYCapped = 25
+         IF MapX < 1 THEN MapXCapped = 1
+         IF MapX > 68 THEN MapXCapped = 60
+         COLOR 0, 7: LOCATE 2, 3: PRINT " wiersz:   ": LOCATE 2, 11: PRINT MapYCapped;
+         LOCATE 2, 14: PRINT ", kolumna:    ": LOCATE 2, 24: PRINT MapXCapped;
+         'pasek menu
+         COLOR 0, 7: LOCATE 1, 1: PRINT "  Plik  Warstwy  Instrukcja  Slownik                                            ";
+         COLOR 4: LOCATE 1, 6: PRINT "k"; 'czerwone litery
+         LOCATE 1, 9: PRINT "W";
+         'ramka mapy
+         'wspolrzedne kursora na mapie
+         'wyswietlanie mapy z pliku
+         'zdarzenia myszy
+         IF Y = 1 AND _MOUSEBUTTON(1) THEN
+            IF X > 1 AND X < 6 THEN edytor_menu_plik TempY, TempX, TempVar
+            IF X > 7 AND X < 17 THEN edytor_pelny_menu_wybor_warstwy TempY, TempX, FullEditLayer
+            CLS , 1
+         END IF
+         '1. klikanie LPM na mapie w celu podswietlenia elementow
+         IF Y > FramePosY AND Y < FramePosY + FrameLineCount + 1 AND X > FramePosX AND X < FramePosX + FrameTxtLength + 1 AND _MOUSEBUTTON(1) THEN 'sprawdzenie, czy klikniecie jest wewnatrz ramki
+            'wyszukanie w tabeli mapy kliknietego elementu i podswietlenie go (negatyw) NIE DZIALA
+            FOR i = 1 TO UBOUND(MapTable) 'przeszukaj tabele
+               IF MapY = MapTable(i).CharY AND MapX = MapTable(i).CharX THEN
+                  COLOR 0, 3: LOCATE MapTable(i).CharY, MapTable(i).CharX: PRINT Char$
+                  EXIT FOR 'jesli znaleziono element, to mozna wyjsc z szukania i wrocic do klikania
+               END IF
+            NEXT i
+         END IF
+         '2. klikniecie PPM na zaznaczeniu otwiera dialog z parametrami toru (szlakowy/stacyjny, glowny/boczny) i polami tekstowymi dla jego numeru oraz dlugosci
+         '3. zamkniecie wypelnionego dialogu uruchamia zapis tabeli do pliku toru, np. tor1szl.txt, tor169sta.txt
+         '4. mozliwosc edycji i skasowania utworzonej tabeli i pliku (PPM -> edytuj/skasuj)
+      LOOP WHILE _MOUSEINPUT
+      'zdarzenia klawiatury
+   LOOP
 END SUB
 '------------------------------------------------------------------------------'
 '                        EDYTOR MAP - TRYB UPROSZCZONY                         '
@@ -501,277 +532,276 @@ END SUB
 '------------------------------------------------------------------------------'
 '                      PROCEDURY - EDYTOR MAP - TRYB PELNY                     '
 '------------------------------------------------------------------------------'
-SUB edytor_pelny_tabela_mapa_wyswietlanie
-    IF liczba_rekordow_tabeli_mapy > 0 THEN 'tylko jesli cokolwiek do niej wpisano
-        FOR nr_rekordu = 1 TO UBOUND(tabela_mapa)
-            COLOR tabela_mapa(nr_rekordu).kolor_znaku, 1: LOCATE tabela_mapa(nr_rekordu).wiersz_znaku + 2, tabela_mapa(nr_rekordu).kolumna_znaku + 1: PRINT CHR$(tabela_mapa(nr_rekordu).znak_kod); 'wiersz +2 i kolumna +1 to offset
-        NEXT nr_rekordu
-    END IF
+SUB edytor_pelny_MapTable_wyswietlanie
+   IF MapTableRecCount > 0 THEN 'tylko jesli cokolwiek do niej wpisano
+      FOR RecNr = 1 TO UBOUND(MapTable)
+         COLOR MapTable(RecNr).CharColor, 1: LOCATE MapTable(RecNr).CharY + 2, MapTable(RecNr).CharX + 1: PRINT CHR$(MapTable(RecNr).CharCode); 'wiersz +2 i kolumna +1 to offset
+      NEXT RecNr
+   END IF
 END SUB
 
-SUB edytor_pelny_tabela_mapa_usuwanie
-    'usuwanie konkretnego wpisu: za dany wpis podstawia sie ostatni
-    tabela_mapa(nr_rekordu).wiersz_znaku = tabela_mapa(UBOUND(tabela_mapa)).wiersz_znaku
-    tabela_mapa(nr_rekordu).kolumna_znaku = tabela_mapa(UBOUND(tabela_mapa)).kolumna_znaku
-    tabela_mapa(nr_rekordu).kolor_znaku = tabela_mapa(UBOUND(tabela_mapa)).kolor_znaku
-    tabela_mapa(nr_rekordu).znak_kod = tabela_mapa(UBOUND(tabela_mapa)).znak_kod
-    'ostatni wpis teraz jest dublem wiec trzeba upierdolic tabele o ten rekord
-    REDIM _PRESERVE tabela_mapa(UBOUND(tabela_mapa) - 1) AS typ_tabela_mapa '_PRESERVE zeby REDIM nie czyscil rekordow przy zmianie wielkosci tabeli
-    liczba_rekordow_tabeli_mapy = liczba_rekordow_tabeli_mapy - 1 'aktualizuj licznik rekordow
+SUB edytor_pelny_MapTable_usuwanie
+   'usuwanie konkretnego wpisu: za dany wpis podstawia sie ostatni
+   MapTable(RecNr).CharY = MapTable(UBOUND(MapTable)).CharY
+   MapTable(RecNr).CharX = MapTable(UBOUND(MapTable)).CharX
+   MapTable(RecNr).CharColor = MapTable(UBOUND(MapTable)).CharColor
+   MapTable(RecNr).CharCode = MapTable(UBOUND(MapTable)).CharCode
+   'ostatni wpis teraz jest dublem wiec trzeba upierdolic tabele o ten rekord
+   REDIM _PRESERVE MapTable(UBOUND(MapTable) - 1) AS TypeMapTable '_PRESERVE zeby REDIM nie czyscil rekordow przy zmianie wielkosci tabeli
+   MapTableRecCount = MapTableRecCount - 1 'aktualizuj licznik rekordow
 END SUB
 '------------------------------------------------------------------------------'
 '                      PROCEDURY - EDYTOR MAP - OBA TRYBY                      '
 '------------------------------------------------------------------------------'
-SUB edytor_menu_plik (tymczasowy_wiersz, tymczasowa_kolumna, x)
-    x = 0 ' zmienna potrzebna do zakonczenia gry po wybraniu opcji "Koniec"
-    ramka_wiersz_poczatku = 2
-    ramka_kolumna_poczatku = 1
-    ramka_liczba_wierszy = 4
-    ramka_dlugosc_tekstu = 9
-    ramka_kolor_znakow = 0: ramka_kolor_tla = 7
-    ramka_gora$ = CHR$(196): ramka_dol$ = CHR$(196): ramka_boki$ = CHR$(179)
-    rysuj_ramke ramka_wiersz_poczatku, ramka_kolumna_poczatku, ramka_liczba_wierszy, ramka_dlugosc_tekstu, ramka_kolor_znakow, ramka_kolor_tla, ramka_gora$, ramka_dol$, ramka_boki$
-    COLOR 8, 0: LOCATE 1, 2: PRINT " Plik " 'odwroc kolory w nazwie otwartego menu
-    'petla obslugi klawiatury i myszy - wybor opcji lub zamkniecie menu
-    DO
-        klawisz$ = UCASE$(INKEY$)
-        DO: _LIMIT 500
-            koordynaty_kursora wiersz, kolumna
-            'opcje menu i podswietlanie wskazanej
-            IF wiersz = 3 AND kolumna > 1 AND kolumna < 13 THEN 'kursor na napisie
-                COLOR 7, 0: LOCATE 3, 2: PRINT " Nowa mapa " 'napis w negatywie
-            ELSE
-                COLOR 0, 7: LOCATE 3, 2: PRINT " Nowa mapa " 'napis zwykly
-                COLOR 4: LOCATE 3, 3: PRINT "N" 'czerwona litera
-            END IF
-            IF wiersz = 4 AND kolumna > 1 AND kolumna < 13 THEN 'kursor na napisie
-                COLOR 7, 0: LOCATE 4, 2: PRINT " Wczytaj   " 'napis w negatywie
-            ELSE
-                COLOR 0, 7: LOCATE 4, 2: PRINT " Wczytaj   " 'napis zwykly
-                COLOR 4: LOCATE 4, 3: PRINT "W" 'czerwona litera
-            END IF
-            IF wiersz = 5 AND kolumna > 1 AND kolumna < 13 THEN 'kursor na napisie
-                COLOR 7, 0: LOCATE 5, 2: PRINT " Zapisz    " 'napis w negatywie
-            ELSE
-                COLOR 0, 7: LOCATE 5, 2: PRINT " Zapisz    " 'napis zwykly
-                COLOR 4: LOCATE 5, 3: PRINT "Z" 'czerwona litera
-            END IF
-            IF wiersz = 6 AND kolumna > 1 AND kolumna < 13 THEN 'kursor na napisie
-                COLOR 7, 0: LOCATE 6, 2: PRINT " Koniec    " 'napis w negatywie
-            ELSE
-                COLOR 0, 7: LOCATE 6, 2: PRINT " Koniec    " 'napis zwykly
-                COLOR 4: LOCATE 6, 3: PRINT "K" 'czerwona litera
-            END IF
-            'zdarzenia myszy
-            IF wiersz = 3 AND kolumna > 1 AND kolumna < 13 AND _MOUSEBUTTON(1) THEN
-                tymczasowy_wiersz = wiersz: tymczasowa_kolumna = kolumna
-                edytor_dialog_nowa_mapa wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna 'okienko dialogowe do rozpoczynania nowej, czystej mapy
-                EXIT SUB 'zamknie menu po zamknieciu okienka nowej mapy
-            END IF
-            IF wiersz = 4 AND kolumna > 1 AND kolumna < 13 AND _MOUSEBUTTON(1) THEN
-                tymczasowy_wiersz = wiersz: tymczasowa_kolumna = kolumna
-                edytor_dialog_wczytaj wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna 'okienko zapisu mapy do pliku mapa.txt
-                EXIT SUB 'zamknie menu po zakmnieciu okienka wczytywania
-            END IF
-            IF wiersz = 5 AND kolumna > 1 AND kolumna < 13 AND _MOUSEBUTTON(1) THEN
-                tymczasowy_wiersz = wiersz: tymczasowa_kolumna = kolumna
-                edytor_dialog_zapisz wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna 'okienko zapisu mapy do pliku mapa.txt
-                EXIT SUB 'zamknie menu po zamknieciu okienka zapisu
-            END IF
-            IF (kolumna > ramka_kolumna_poczatku + ramka_dlugosc_tekstu + 3 OR wiersz > ramka_wiersz_poczatku + ramka_liczba_wierszy + 1) AND _MOUSEBUTTON(1) THEN 'klikniecie poza menu
-                CLS , 0
-                EXIT SUB
-            END IF
-            IF wiersz = 6 AND kolumna > 1 AND kolumna < 13 AND _MOUSEBUTTON(1) THEN 'koniec
-                x = 1 'po zakonczeniu tej procedury wyjdzie z gry do ekranu tytulowego
-                EXIT SUB
-            END IF
-        LOOP WHILE _MOUSEINPUT
-        'zdarzenia klawiatury
-        IF klawisz$ = "N" THEN
-            edytor_dialog_nowa_mapa wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna 'okienko rozpoczynania nowej, czystej mapy
-            EXIT SUB 'zamknie menu po zakmnieciu okienka nowej mapy
-        END IF
-        IF klawisz$ = "W" THEN
-            edytor_dialog_wczytaj wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna
-            EXIT SUB
-        END IF
-        IF klawisz$ = "Z" THEN
-            edytor_dialog_zapisz wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna
-            EXIT SUB
-        END IF
-        IF klawisz$ = "K" THEN
-            x = 1 'po zakonczeniu tej procedury wyjdzie z gry do ekranu tytulowego
-            EXIT SUB
-        END IF
-        IF klawisz$ = CHR$(27) THEN 'Esc
+SUB edytor_menu_plik (TempY, TempX, TempVar)
+   TempVar = 0 ' zmienna potrzebna do zakonczenia gry po wybraniu opcji "Koniec"
+   FramePosX = 1: FramePosY = 2
+   FrameLineCount = 4: FrameTxtLength = 9
+   FrameCharColor = 0: FrameBackColor = 7
+   FrameTop$ = CHR$(196): FrameBottom$ = CHR$(196): FrameSide$ = CHR$(179)
+   rysuj_ramke FramePosY, FramePosX, FrameLineCount, FrameTxtLength, FrameCharColor, FrameBackColor, FrameTop$, FrameBottom$, FrameSide$
+   COLOR 8, 0: LOCATE 1, 2: PRINT " Plik " 'odwroc kolory w nazwie otwartego menu
+   'petla obslugi klawiatury i myszy - wybor opcji lub zamkniecie menu
+   DO
+      Key$ = UCASE$(INKEY$)
+      DO: _LIMIT 500
+         koordynaty_kursora Y, X
+         'opcje menu i podswietlanie wskazanej
+         IF Y = 3 AND X > 1 AND X < 13 THEN 'kursor na napisie
+            COLOR 7, 0: LOCATE 3, 2: PRINT " Nowa mapa " 'napis w negatywie
+         ELSE
+            COLOR 0, 7: LOCATE 3, 2: PRINT " Nowa mapa " 'napis zwykly
+            COLOR 4: LOCATE 3, 3: PRINT "N" 'czerwona litera
+         END IF
+         IF Y = 4 AND X > 1 AND X < 13 THEN 'kursor na napisie
+            COLOR 7, 0: LOCATE 4, 2: PRINT " Wczytaj   " 'napis w negatywie
+         ELSE
+            COLOR 0, 7: LOCATE 4, 2: PRINT " Wczytaj   " 'napis zwykly
+            COLOR 4: LOCATE 4, 3: PRINT "W" 'czerwona litera
+         END IF
+         IF Y = 5 AND X > 1 AND X < 13 THEN 'kursor na napisie
+            COLOR 7, 0: LOCATE 5, 2: PRINT " Zapisz    " 'napis w negatywie
+         ELSE
+            COLOR 0, 7: LOCATE 5, 2: PRINT " Zapisz    " 'napis zwykly
+            COLOR 4: LOCATE 5, 3: PRINT "Z" 'czerwona litera
+         END IF
+         IF Y = 6 AND X > 1 AND X < 13 THEN 'kursor na napisie
+            COLOR 7, 0: LOCATE 6, 2: PRINT " Koniec    " 'napis w negatywie
+         ELSE
+            COLOR 0, 7: LOCATE 6, 2: PRINT " Koniec    " 'napis zwykly
+            COLOR 4: LOCATE 6, 3: PRINT "K" 'czerwona litera
+         END IF
+         'zdarzenia myszy
+         IF Y = 3 AND X > 1 AND X < 13 AND _MOUSEBUTTON(1) THEN
+            TempY = Y: TempX = X
+            edytor_dialog_nowa_mapa Y, X, TempY, TempX 'okienko dialogowe do rozpoczynania nowej, czystej mapy
+            EXIT SUB 'zamknie menu po zamknieciu okienka nowej mapy
+         END IF
+         IF Y = 4 AND X > 1 AND X < 13 AND _MOUSEBUTTON(1) THEN
+            TempY = Y: TempX = X
+            edytor_dialog_wczytaj Y, X, TempY, TempX 'okienko zapisu mapy do pliku mapa.txt
+            EXIT SUB 'zamknie menu po zakmnieciu okienka wczytywania
+         END IF
+         IF Y = 5 AND X > 1 AND X < 13 AND _MOUSEBUTTON(1) THEN
+            TempY = Y: TempX = X
+            edytor_dialog_zapisz Y, X, TempY, TempX 'okienko zapisu mapy do pliku mapa.txt
+            EXIT SUB 'zamknie menu po zamknieciu okienka zapisu
+         END IF
+         IF (X > FramePosX + FrameTxtLength + 3 OR Y = 1 OR Y > FramePosY + FrameLineCount + 1) AND (Y <> TempY OR X <> TempX) AND _MOUSEBUTTON(1) THEN 'klikniecie poza menu
+            TempY = Y: TempX = X 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
             CLS , 0
-            EXIT SUB 'zamkniecie menu
-        END IF
-    LOOP
+            EXIT SUB
+         END IF
+         IF Y = 6 AND X > 1 AND X < 13 AND _MOUSEBUTTON(1) THEN 'koniec
+            TempVar = 1 'po zakonczeniu tej procedury wyjdzie z gry do ekranu tytulowego
+            EXIT SUB
+         END IF
+      LOOP WHILE _MOUSEINPUT
+      'zdarzenia klawiatury
+      IF Key$ = "N" THEN
+         edytor_dialog_nowa_mapa Y, X, TempY, TempX 'okienko rozpoczynania nowej, czystej mapy
+         EXIT SUB 'zamknie menu po zakmnieciu okienka nowej mapy
+      END IF
+      IF Key$ = "W" THEN
+         edytor_dialog_wczytaj Y, X, TempY, TempX
+         EXIT SUB
+      END IF
+      IF Key$ = "Z" THEN
+         edytor_dialog_zapisz Y, X, TempY, TempX
+         EXIT SUB
+      END IF
+      IF Key$ = "K" THEN
+         TempVar = 1 'po zakonczeniu tej procedury wyjdzie z gry do ekranu tytulowego
+         EXIT SUB
+      END IF
+      IF Key$ = CHR$(27) THEN 'Esc
+         CLS , 0
+         EXIT SUB 'zamkniecie menu
+      END IF
+   LOOP
 END SUB
 
-SUB edytor_dialog_nowa_mapa (wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna) 'okienko dialogowe do rozpoczynania nowej, czystej mapy
-    DO
-        klawisz$ = UCASE$(INKEY$)
-        DO: _LIMIT 500
-            ramka_wiersz_poczatku = 10: ramka_kolumna_poczatku = 25: ramka_liczba_wierszy = 4: ramka_dlugosc_tekstu = 20
-            rysuj_ramke ramka_wiersz_poczatku, ramka_kolumna_poczatku, ramka_liczba_wierszy, ramka_dlugosc_tekstu, 0, 3, CHR$(205), CHR$(196), CHR$(179)
-            COLOR 0, 3
-            LOCATE ramka_wiersz_poczatku, ramka_kolumna_poczatku + 2: PRINT " Nowa mapa "
-            LOCATE ramka_wiersz_poczatku + 1, ramka_kolumna_poczatku + 1: PRINT " Dotychczasowy postep ";
-            LOCATE ramka_wiersz_poczatku + 2, ramka_kolumna_poczatku + 1: PRINT " zostanie utracony.   ";
-            LOCATE ramka_wiersz_poczatku + 3, ramka_kolumna_poczatku + 1: PRINT "      Na pewno?       ";
-            LOCATE ramka_wiersz_poczatku + 4, ramka_kolumna_poczatku + 1: PRINT "  Tak            Nie  ";
-            COLOR 4, 3: 'czerwone litery
-            LOCATE ramka_wiersz_poczatku + 4, ramka_kolumna_poczatku + 3: PRINT "T";
-            LOCATE ramka_wiersz_poczatku + 4, ramka_kolumna_poczatku + 18: PRINT "N";
-            koordynaty_kursora wiersz, kolumna
-            'zdarzenia myszy
-            IF wiersz = ramka_wiersz_poczatku + 4 AND kolumna > ramka_kolumna_poczatku + 1 AND kolumna < ramka_kolumna_poczatku + 7 THEN
-                COLOR 7, 0: LOCATE ramka_wiersz_poczatku + 4, ramka_kolumna_poczatku + 2: PRINT " Tak "; 'napis w negatywie
-                IF _MOUSEBUTTON(1) THEN
-                    tymczasowy_wiersz = wiersz: tymczasowa_kolumna = kolumna 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
-                    REDIM tabela_mapa(1) AS typ_tabela_mapa
-                    liczba_rekordow_tabeli_mapy = 0
-                    EXIT SUB 'przewymiaruj tabele i zamknij okienko
-                END IF
+SUB edytor_dialog_nowa_mapa (Y, X, TempY, TempX) 'okienko dialogowe do rozpoczynania nowej, czystej mapy
+   DO
+      Key$ = UCASE$(INKEY$)
+      DO: _LIMIT 500
+         FramePosY = 10: FramePosX = 25: FrameLineCount = 4: FrameTxtLength = 20
+         rysuj_ramke FramePosY, FramePosX, FrameLineCount, FrameTxtLength, 0, 3, CHR$(205), CHR$(196), CHR$(179)
+         COLOR 0, 3
+         LOCATE FramePosY, FramePosX + 2: PRINT " Nowa mapa "
+         LOCATE FramePosY + 1, FramePosX + 1: PRINT " Dotychczasowy postep ";
+         LOCATE FramePosY + 2, FramePosX + 1: PRINT " zostanie utracony.   ";
+         LOCATE FramePosY + 3, FramePosX + 1: PRINT "      Na pewno?       ";
+         LOCATE FramePosY + 4, FramePosX + 1: PRINT "  Tak            Nie  ";
+         COLOR 4, 3: 'czerwone litery
+         LOCATE FramePosY + 4, FramePosX + 3: PRINT "T";
+         LOCATE FramePosY + 4, FramePosX + 18: PRINT "N";
+         koordynaty_kursora Y, X
+         'zdarzenia myszy
+         IF Y = FramePosY + 4 AND X > FramePosX + 1 AND X < FramePosX + 7 THEN
+            COLOR 7, 0: LOCATE FramePosY + 4, FramePosX + 2: PRINT " Tak "; 'napis w negatywie
+            IF _MOUSEBUTTON(1) THEN
+               TempY = Y: TempX = X 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
+               REDIM MapTable(1) AS TypeMapTable
+               MapTableRecCount = 0
+               EXIT SUB 'przewymiaruj tabele i zamknij okienko
             END IF
-            IF wiersz = ramka_wiersz_poczatku + 4 AND kolumna > ramka_kolumna_poczatku + 16 AND kolumna < ramka_kolumna_poczatku + 22 THEN
-                COLOR 7, 0: LOCATE ramka_wiersz_poczatku + 4, ramka_kolumna_poczatku + 17: PRINT " Nie "; 'napis w negatywie
-                IF _MOUSEBUTTON(1) THEN
-                    tymczasowy_wiersz = wiersz: tymczasowa_kolumna = kolumna 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
-                    EXIT SUB
-                END IF
+         END IF
+         IF Y = FramePosY + 4 AND X > FramePosX + 16 AND X < FramePosX + 22 THEN
+            COLOR 7, 0: LOCATE FramePosY + 4, FramePosX + 17: PRINT " Nie "; 'napis w negatywie
+            IF _MOUSEBUTTON(1) THEN
+               TempY = Y: TempX = X 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
+               EXIT SUB
             END IF
-        LOOP WHILE _MOUSEINPUT
-        'zdarzenia klawiatury
-        IF klawisz$ = "T" OR klawisz$ = CHR$(13) THEN
-            REDIM tabela_mapa(1) AS typ_tabela_mapa: EXIT SUB 'przewymiaruj tabele bez zachowania tresci i zamknij okienko
-        END IF
-        IF klawisz$ = "N" OR klawisz$ = CHR$(27) THEN EXIT SUB
-    LOOP
+         END IF
+      LOOP WHILE _MOUSEINPUT
+      'zdarzenia klawiatury
+      IF Key$ = "T" OR Key$ = CHR$(13) THEN
+         REDIM MapTable(1) AS TypeMapTable: EXIT SUB 'przewymiaruj tabele bez zachowania tresci i zamknij okienko
+      END IF
+      IF Key$ = "N" OR Key$ = CHR$(27) THEN EXIT SUB
+   LOOP
 END SUB
 
-SUB edytor_dialog_wczytaj (wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna)
-    DO
-        klawisz$ = UCASE$(INKEY$)
-        DO: _LIMIT 500
-            ramka_wiersz_poczatku = 10: ramka_kolumna_poczatku = 25: ramka_liczba_wierszy = 4: ramka_dlugosc_tekstu = 20
-            rysuj_ramke ramka_wiersz_poczatku, ramka_kolumna_poczatku, ramka_liczba_wierszy, ramka_dlugosc_tekstu, 0, 3, CHR$(205), CHR$(196), CHR$(179)
-            COLOR 0, 3
-            LOCATE ramka_wiersz_poczatku, ramka_kolumna_poczatku + 2: PRINT " Wczytaj "
-            LOCATE ramka_wiersz_poczatku + 1, ramka_kolumna_poczatku + 1: PRINT " Dotychczasowy postep ";
-            LOCATE ramka_wiersz_poczatku + 2, ramka_kolumna_poczatku + 1: PRINT " zostanie utracony.   ";
-            LOCATE ramka_wiersz_poczatku + 3, ramka_kolumna_poczatku + 1: PRINT "      Na pewno?       ";
-            LOCATE ramka_wiersz_poczatku + 4, ramka_kolumna_poczatku + 1: PRINT "  Tak            Nie  ";
-            COLOR 4, 3: 'czerwone litery
-            LOCATE ramka_wiersz_poczatku + 4, ramka_kolumna_poczatku + 3: PRINT "T";
-            LOCATE ramka_wiersz_poczatku + 4, ramka_kolumna_poczatku + 18: PRINT "N";
-            koordynaty_kursora wiersz, kolumna
-            'zdarzenia myszy
-            IF wiersz = ramka_wiersz_poczatku + 4 AND kolumna > ramka_kolumna_poczatku + 1 AND kolumna < ramka_kolumna_poczatku + 7 THEN
-                COLOR 7, 0: LOCATE ramka_wiersz_poczatku + 4, ramka_kolumna_poczatku + 2: PRINT " Tak "; 'napis w negatywie
-                IF _MOUSEBUTTON(1) THEN
-                    tymczasowy_wiersz = wiersz: tymczasowa_kolumna = kolumna 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
-                    REDIM tabela_mapa(1) AS typ_tabela_mapa 'przygotuj tabele na nowe dane
-                    liczba_rekordow_tabeli_mapy = 0
-                    OPEN folder_gry$ + "tryb pelny\Przykladowa Stacja\mapa.txt" FOR INPUT AS #1 'otworz plik mapa.txt i wczytaj go do tabeli
-                    DO WHILE NOT EOF(1)
-                        IF UBOUND(tabela_mapa) = liczba_rekordow_tabeli_mapy THEN REDIM _PRESERVE tabela_mapa(UBOUND(tabela_mapa) + 1) AS typ_tabela_mapa 'jesli brak pustego rekordu to dodaj go
-                        INPUT #1, tabela_mapa(UBOUND(tabela_mapa)).wiersz_znaku, tabela_mapa(UBOUND(tabela_mapa)).kolumna_znaku, tabela_mapa(UBOUND(tabela_mapa)).kolor_znaku, tabela_mapa(UBOUND(tabela_mapa)).znak_kod
-                        liczba_rekordow_tabeli_mapy = liczba_rekordow_tabeli_mapy + 1
-                    LOOP
-                    CLOSE #1
-                    EXIT SUB
-                END IF
+SUB edytor_dialog_wczytaj (Y, X, TempY, TempX)
+   DO
+      Key$ = UCASE$(INKEY$)
+      DO: _LIMIT 500
+         FramePosY = 10: FramePosX = 25: FrameLineCount = 4: FrameTxtLength = 20
+         rysuj_ramke FramePosY, FramePosX, FrameLineCount, FrameTxtLength, 0, 3, CHR$(205), CHR$(196), CHR$(179)
+         COLOR 0, 3
+         LOCATE FramePosY, FramePosX + 2: PRINT " Wczytaj "
+         LOCATE FramePosY + 1, FramePosX + 1: PRINT " Dotychczasowy postep ";
+         LOCATE FramePosY + 2, FramePosX + 1: PRINT " zostanie utracony.   ";
+         LOCATE FramePosY + 3, FramePosX + 1: PRINT "      Na pewno?       ";
+         LOCATE FramePosY + 4, FramePosX + 1: PRINT "  Tak            Nie  ";
+         COLOR 4, 3: 'czerwone litery
+         LOCATE FramePosY + 4, FramePosX + 3: PRINT "T";
+         LOCATE FramePosY + 4, FramePosX + 18: PRINT "N";
+         koordynaty_kursora Y, X
+         'zdarzenia myszy
+         IF Y = FramePosY + 4 AND X > FramePosX + 1 AND X < FramePosX + 7 THEN
+            COLOR 7, 0: LOCATE FramePosY + 4, FramePosX + 2: PRINT " Tak "; 'napis w negatywie
+            IF _MOUSEBUTTON(1) THEN
+               TempY = Y: TempX = X 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
+               REDIM MapTable(1) AS TypeMapTable 'przygotuj tabele na nowe dane
+               MapTableRecCount = 0
+               OPEN GameDir$ + "tryb pelny\Przykladowa Stacja\mapa.txt" FOR INPUT AS #1 'otworz plik mapa.txt i wczytaj go do tabeli
+               DO WHILE NOT EOF(1)
+                  IF UBOUND(MapTable) = MapTableRecCount THEN REDIM _PRESERVE MapTable(UBOUND(MapTable) + 1) AS TypeMapTable 'jesli brak pustego rekordu to dodaj go
+                  INPUT #1, MapTable(UBOUND(MapTable)).CharY, MapTable(UBOUND(MapTable)).CharX, MapTable(UBOUND(MapTable)).CharColor, MapTable(UBOUND(MapTable)).CharCode
+                  MapTableRecCount = MapTableRecCount + 1
+               LOOP
+               CLOSE #1
+               EXIT SUB
             END IF
-            IF wiersz = ramka_wiersz_poczatku + 4 AND kolumna > ramka_kolumna_poczatku + 16 AND kolumna < ramka_kolumna_poczatku + 20 THEN
-                COLOR 7, 0: LOCATE ramka_wiersz_poczatku + 4, ramka_kolumna_poczatku + 17: PRINT " Nie "; 'napis w negatywie
-                IF _MOUSEBUTTON(1) THEN
-                    EXIT SUB
-                END IF
+         END IF
+         IF Y = FramePosY + 4 AND X > FramePosX + 16 AND X < FramePosX + 20 THEN
+            COLOR 7, 0: LOCATE FramePosY + 4, FramePosX + 17: PRINT " Nie "; 'napis w negatywie
+            IF _MOUSEBUTTON(1) THEN
+               EXIT SUB
             END IF
-            IF (wiersz < ramka_wiersz_poczatku OR wiersz > ramka_wiersz_poczatku + ramka_liczba_wierszy + 1 OR kolumna < ramka_kolumna_poczatku OR kolumna > ramka_kolumna_poczatku + ramka_dlugosc_tekstu + 1) AND _MOUSEBUTTON(1) AND (wiersz <> tymczasowy_wiersz OR kolumna <> tymczasowa_kolumna) THEN 'klikniecie poza ramka
-                EXIT SUB
+         END IF
+         IF (Y < FramePosY OR Y > FramePosY + FrameLineCount + 1 OR X < FramePosX OR X > FramePosX + FrameTxtLength + 1) AND _MOUSEBUTTON(1) AND (Y <> TempY OR X <> TempX) THEN 'klikniecie poza ramka
+            EXIT SUB
+         END IF
+      LOOP WHILE _MOUSEINPUT
+      'zdarzenia klawiatury
+      IF Key$ = "T" OR Key$ = CHR$(13) THEN
+         REDIM MapTable(1) AS TypeMapTable 'przygotuj tabele na nowe dane
+         MapTableRecCount = 0
+         OPEN GameDir$ + "tryb pelny\Przykladowa Stacja\mapa.txt" FOR INPUT AS #1 'otworz plik mapa.txt i wczytaj go do tabeli
+         DO WHILE NOT EOF(1)
+            IF UBOUND(MapTable) = MapTableRecCount THEN REDIM MapTable(UBOUND(MapTable) + 1) AS TypeMapTable 'jesli brak pustego rekordu to dodaj go
+            INPUT #1, MapTable(UBOUND(MapTable)).CharY, MapTable(UBOUND(MapTable)).CharX, MapTable(UBOUND(MapTable)).CharColor, MapTable(UBOUND(MapTable)).CharCode
+            MapTableRecCount = MapTableRecCount + 1
+         LOOP
+         CLOSE #1
+         EXIT SUB
+      END IF
+      IF Key$ = "N" OR Key$ = CHR$(27) THEN EXIT SUB
+   LOOP
+END SUB
+
+SUB edytor_dialog_zapisz (Y, X, TempY, TempX)
+   DO
+      Key$ = UCASE$(INKEY$)
+      DO: _LIMIT 500
+         FramePosY = 10: FramePosX = 25: FrameLineCount = 4: FrameTxtLength = 18
+         rysuj_ramke FramePosY, FramePosX, FrameLineCount, FrameTxtLength, 0, 3, CHR$(205), CHR$(196), CHR$(179)
+         COLOR 0, 3
+         LOCATE FramePosY, FramePosX + 2: PRINT " Zapisz "
+         LOCATE FramePosY + 1, FramePosX + 1: PRINT " Zostanie nadpisany ";
+         LOCATE FramePosY + 2, FramePosX + 1: PRINT " plik mapa.txt.     ";
+         LOCATE FramePosY + 3, FramePosX + 1: PRINT "     Na pewno?      ";
+         LOCATE FramePosY + 4, FramePosX + 1: PRINT "  Tak          Nie  ";
+         COLOR 4, 3: 'czerwone litery
+         LOCATE FramePosY + 4, FramePosX + 3: PRINT "T";
+         LOCATE FramePosY + 4, FramePosX + 16: PRINT "N";
+         koordynaty_kursora Y, X
+         'zdarzenia myszy
+         IF Y = FramePosY + 4 AND X > FramePosX + 1 AND X < FramePosX + 7 THEN
+            COLOR 7, 0: LOCATE FramePosY + 4, FramePosX + 2: PRINT " Tak "; 'napis w negatywie
+            IF MapTableRecCount > 0 THEN 'wykluczenie mozliwosci zapisu pustej mapy
+               IF _MOUSEBUTTON(1) THEN
+                  TempY = Y: TempX = X 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
+                  OPEN GameDir$ + "tryb pelny\Przykladowa Stacja\mapa.txt" FOR OUTPUT AS #1
+                  FOR RecNr = 1 TO UBOUND(MapTable)
+                     WRITE #1, MapTable(RecNr).CharY, MapTable(RecNr).CharX, MapTable(RecNr).CharColor, MapTable(RecNr).CharCode
+                  NEXT RecNr
+                  CLOSE #1
+                  EXIT SUB
+               END IF
+            ELSE
+               COLOR 4, 0: LOCATE 25, 1: PRINT "Nie mozna zapisac pustej mapy."; 'PRZENIESC TO NA PASEK KOMUNIKATOW
             END IF
-        LOOP WHILE _MOUSEINPUT
-        'zdarzenia klawiatury
-        IF klawisz$ = "T" OR klawisz$ = CHR$(13) THEN
-            REDIM tabela_mapa(1) AS typ_tabela_mapa 'przygotuj tabele na nowe dane
-            liczba_rekordow_tabeli_mapy = 0
-            OPEN folder_gry$ + "tryb pelny\Przykladowa Stacja\mapa.txt" FOR INPUT AS #1 'otworz plik mapa.txt i wczytaj go do tabeli
-            DO WHILE NOT EOF(1)
-                IF UBOUND(tabela_mapa) = liczba_rekordow_tabeli_mapy THEN REDIM tabela_mapa(UBOUND(tabela_mapa) + 1) AS typ_tabela_mapa 'jesli brak pustego rekordu to dodaj go
-                INPUT #1, tabela_mapa(UBOUND(tabela_mapa)).wiersz_znaku, tabela_mapa(UBOUND(tabela_mapa)).kolumna_znaku, tabela_mapa(UBOUND(tabela_mapa)).kolor_znaku, tabela_mapa(UBOUND(tabela_mapa)).znak_kod
-                liczba_rekordow_tabeli_mapy = liczba_rekordow_tabeli_mapy + 1
-            LOOP
+         END IF
+         IF Y = FramePosY + 4 AND X > FramePosX + 14 AND X < FramePosX + 20 THEN
+            COLOR 7, 0: LOCATE FramePosY + 4, FramePosX + 15: PRINT " Nie "; 'napis w negatywie
+            IF _MOUSEBUTTON(1) THEN
+               TempY = Y: TempX = X 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
+               EXIT SUB
+            END IF
+         END IF
+         IF (Y < FramePosY OR Y > FramePosY + FrameLineCount + 1 OR X < FramePosX OR X > FramePosX + FrameTxtLength + 1) AND _MOUSEBUTTON(1) AND (Y <> TempY OR X <> TempX) THEN 'klikniecie poza ramka
+            EXIT SUB
+         END IF
+      LOOP WHILE _MOUSEINPUT
+      'zdarzenia klawiatury
+      IF Key$ = "T" OR Key$ = CHR$(13) THEN
+         IF MapTableRecCount > 0 THEN 'wykluczenie mozliwosci zapisu pustej mapy
+            OPEN GameDir$ + "tryb pelny\Przykladowa Stacja\mapa.txt" FOR OUTPUT AS #1
+            FOR RecNr = 1 TO UBOUND(MapTable)
+               WRITE #1, MapTable(RecNr).CharY, MapTable(RecNr).CharX, MapTable(RecNr).CharColor, MapTable(RecNr).CharCode
+            NEXT RecNr
             CLOSE #1
             EXIT SUB
-        END IF
-        IF klawisz$ = "N" OR klawisz$ = CHR$(27) THEN EXIT SUB
-    LOOP
-END SUB
-
-SUB edytor_dialog_zapisz (wiersz, kolumna, tymczasowy_wiersz, tymczasowa_kolumna)
-    DO
-        klawisz$ = UCASE$(INKEY$)
-        DO: _LIMIT 500
-            ramka_wiersz_poczatku = 10: ramka_kolumna_poczatku = 25: ramka_liczba_wierszy = 4: ramka_dlugosc_tekstu = 18
-            rysuj_ramke ramka_wiersz_poczatku, ramka_kolumna_poczatku, ramka_liczba_wierszy, ramka_dlugosc_tekstu, 0, 3, CHR$(205), CHR$(196), CHR$(179)
-            COLOR 0, 3
-            LOCATE ramka_wiersz_poczatku, ramka_kolumna_poczatku + 2: PRINT " Zapisz "
-            LOCATE ramka_wiersz_poczatku + 1, ramka_kolumna_poczatku + 1: PRINT " Zostanie nadpisany ";
-            LOCATE ramka_wiersz_poczatku + 2, ramka_kolumna_poczatku + 1: PRINT " plik mapa.txt.     ";
-            LOCATE ramka_wiersz_poczatku + 3, ramka_kolumna_poczatku + 1: PRINT "     Na pewno?      ";
-            LOCATE ramka_wiersz_poczatku + 4, ramka_kolumna_poczatku + 1: PRINT "  Tak          Nie  ";
-            COLOR 4, 3: 'czerwone litery
-            LOCATE ramka_wiersz_poczatku + 4, ramka_kolumna_poczatku + 3: PRINT "T";
-            LOCATE ramka_wiersz_poczatku + 4, ramka_kolumna_poczatku + 16: PRINT "N";
-            koordynaty_kursora wiersz, kolumna
-            'zdarzenia myszy
-            IF wiersz = ramka_wiersz_poczatku + 4 AND kolumna > ramka_kolumna_poczatku + 1 AND kolumna < ramka_kolumna_poczatku + 7 THEN
-                COLOR 7, 0: LOCATE ramka_wiersz_poczatku + 4, ramka_kolumna_poczatku + 2: PRINT " Tak "; 'napis w negatywie
-                IF liczba_rekordow_tabeli_mapy > 0 THEN 'wykluczenie mozliwosci zapisu pustej mapy
-                    IF _MOUSEBUTTON(1) THEN
-                        tymczasowy_wiersz = wiersz: tymczasowa_kolumna = kolumna 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
-                        OPEN folder_gry$ + "tryb pelny\Przykladowa Stacja\mapa.txt" FOR OUTPUT AS #1
-                        FOR nr_rekordu = 1 TO UBOUND(tabela_mapa)
-                            WRITE #1, tabela_mapa(nr_rekordu).wiersz_znaku, tabela_mapa(nr_rekordu).kolumna_znaku, tabela_mapa(nr_rekordu).kolor_znaku, tabela_mapa(nr_rekordu).znak_kod
-                        NEXT nr_rekordu
-                        CLOSE #1
-                        EXIT SUB
-                    END IF
-                ELSE
-                    COLOR 4, 0: LOCATE 25, 1: PRINT "Nie mozna zapisac pustej mapy."; 'PRZENIESC TO NA PASEK KOMUNIKATOW
-                END IF
-            END IF
-            IF wiersz = ramka_wiersz_poczatku + 4 AND kolumna > ramka_kolumna_poczatku + 14 AND kolumna < ramka_kolumna_poczatku + 20 THEN
-                COLOR 7, 0: LOCATE ramka_wiersz_poczatku + 4, ramka_kolumna_poczatku + 15: PRINT " Nie "; 'napis w negatywie
-                IF _MOUSEBUTTON(1) THEN
-                    tymczasowy_wiersz = wiersz: tymczasowa_kolumna = kolumna 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
-                    EXIT SUB
-                END IF
-            END IF
-            IF (wiersz < ramka_wiersz_poczatku OR wiersz > ramka_wiersz_poczatku + ramka_liczba_wierszy + 1 OR kolumna < ramka_kolumna_poczatku OR kolumna > ramka_kolumna_poczatku + ramka_dlugosc_tekstu + 1) AND _MOUSEBUTTON(1) AND (wiersz <> tymczasowy_wiersz OR kolumna <> tymczasowa_kolumna) THEN 'klikniecie poza ramka
-                EXIT SUB
-            END IF
-        LOOP WHILE _MOUSEINPUT
-        'zdarzenia klawiatury
-        IF klawisz$ = "T" OR klawisz$ = CHR$(13) THEN
-            IF liczba_rekordow_tabeli_mapy > 0 THEN 'wykluczenie mozliwosci zapisu pustej mapy
-                OPEN folder_gry$ + "tryb pelny\Przykladowa Stacja\mapa.txt" FOR OUTPUT AS #1
-                FOR nr_rekordu = 1 TO UBOUND(tabela_mapa)
-                    WRITE #1, tabela_mapa(nr_rekordu).wiersz_znaku, tabela_mapa(nr_rekordu).kolumna_znaku, tabela_mapa(nr_rekordu).kolor_znaku, tabela_mapa(nr_rekordu).znak_kod
-                NEXT nr_rekordu
-                CLOSE #1
-                EXIT SUB
-            ELSE
-                COLOR 4, 0: LOCATE 25, 1: PRINT "Nie mozna zapisac pustej mapy."; 'PRZENIESC TO NA PASEK KOMUNIKATOW
-            END IF
-        END IF
-        IF klawisz$ = "N" OR klawisz$ = CHR$(27) THEN EXIT SUB
-    LOOP
+         ELSE
+            COLOR 4, 0: LOCATE 25, 1: PRINT "Nie mozna zapisac pustej mapy."; 'PRZENIESC TO NA PASEK KOMUNIKATOW
+         END IF
+      END IF
+      IF Key$ = "N" OR Key$ = CHR$(27) THEN EXIT SUB
+   LOOP
 END SUB
 
 '$include: 'procedury.bi'

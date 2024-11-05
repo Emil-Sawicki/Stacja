@@ -88,7 +88,7 @@ SUB EditFullElems (PosX, PosY, CurX, CurY, TempX, TempY, Char$, CharColor)
    TableElemsY(19) = PosY + 6: TableElemsX(19) = PosX + 6: TableElemsChar(19) = 30 '
    TableElemsY(20) = PosY + 6: TableElemsX(20) = PosX + 8: TableElemsChar(20) = 31 '
    FOR i = 1 TO 20
-      IF Y = TableElemsY(i) AND X = TableElemsX(i) THEN 'kursor na znaku
+      IF CurY = TableElemsY(i) AND CurX = TableElemsX(i) THEN 'kursor na znaku
          COLOR 0, 3: LOCATE TableElemsY(i), TableElemsX(i): PRINT CHR$(TableElemsChar(i)); 'znak w negatywie
          IF _MOUSEBUTTON(1) THEN
             Char$ = CHR$(TableElemsChar(i)) 'klikniecie na znaku i zaladowanie go do zmiennej

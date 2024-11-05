@@ -407,7 +407,7 @@ SUB EditFullMap (TempVar) '1. warstwa - rysowanie schematu torow
          spluczka
          edytor_pelny_MapTable_wyswietlanie 'rysuje ponownie mape
          PosX = 70: PosY = 2 'pozycja tablicy znakow do edycji torowiska
-         EditFullElems PosX, PosY, X, Y, TempX, TempY, Char$, CharColor 'wyswietlanie tablicy znakow i ladowanie znaku do zmiennej 'Char$'
+         EditFullElems PosX, PosY, CurX, CurY, TempX, TempY, Char$, CharColor 'wyswietlanie tablicy znakow i ladowanie znaku do zmiennej 'Char$'
          IF CurX > 1 AND CurX < 69 AND CurY > 2 AND CurY < 26 AND _MOUSEBUTTON(1) AND Char$ <> "" AND (CurX <> TempX OR CurY <> TempY) THEN 'klikniecie w ramce mapy
             TempX = CurX: TempY = CurY 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
             '1. WPISYWANIE DO TABELI
@@ -658,18 +658,33 @@ SUB EditMenuFile (TempY, TempX, TempVar)
          'opcje menu i podswietlanie wskazanej
          IF CurY = 3 AND CurX > 1 AND CurX < 13 THEN 'kursor na napisie
             COLOR 7, 0: LOCATE 3, 2: PRINT " Nowa mapa " 'napis w negatywie
+            IF _MOUSEBUTTON(1) THEN
+               TempY = CurY: TempX = CurX
+               edytor_dialog_nowa_mapa CurY, CurX, TempY, TempX 'okienko dialogowe do rozpoczynania nowej, czystej mapy
+               EXIT SUB 'zamknie menu po zamknieciu okienka nowej mapy
+            END IF
          ELSE
             COLOR 0, 7: LOCATE 3, 2: PRINT " Nowa mapa " 'napis zwykly
             COLOR 4: LOCATE 3, 3: PRINT "N" 'czerwona litera
          END IF
          IF CurY = 4 AND CurX > 1 AND CurX < 13 THEN 'kursor na napisie
             COLOR 7, 0: LOCATE 4, 2: PRINT " Wczytaj   " 'napis w negatywie
+            IF _MOUSEBUTTON(1) THEN
+               TempY = CurY: TempX = CurX
+               edytor_dialog_wczytaj CurY, CurX, TempY, TempX 'okienko zapisu mapy do pliku mapa.txt
+               EXIT SUB 'zamknie menu po zakmnieciu okienka wczytywania
+            END IF
          ELSE
             COLOR 0, 7: LOCATE 4, 2: PRINT " Wczytaj   " 'napis zwykly
             COLOR 4: LOCATE 4, 3: PRINT "W" 'czerwona litera
          END IF
          IF CurY = 5 AND CurX > 1 AND CurX < 13 THEN 'kursor na napisie
             COLOR 7, 0: LOCATE 5, 2: PRINT " Zapisz    " 'napis w negatywie
+            IF _MOUSEBUTTON(1) THEN
+               TempY = CurY: TempX = CurX
+               edytor_dialog_zapisz CurY, CurX, TempY, TempX 'okienko zapisu mapy do pliku mapa.txt
+               EXIT SUB 'zamknie menu po zamknieciu okienka zapisu
+            END IF
          ELSE
             COLOR 0, 7: LOCATE 5, 2: PRINT " Zapisz    " 'napis zwykly
             COLOR 4: LOCATE 5, 3: PRINT "Z" 'czerwona litera
@@ -681,21 +696,6 @@ SUB EditMenuFile (TempY, TempX, TempVar)
             COLOR 4: LOCATE 6, 3: PRINT "K" 'czerwona litera
          END IF
          'zdarzenia myszy
-         IF CurY = 3 AND CurX > 1 AND CurX < 13 AND _MOUSEBUTTON(1) THEN
-            TempY = CurY: TempX = CurX
-            edytor_dialog_nowa_mapa CurY, CurX, TempY, TempX 'okienko dialogowe do rozpoczynania nowej, czystej mapy
-            EXIT SUB 'zamknie menu po zamknieciu okienka nowej mapy
-         END IF
-         IF CurY = 4 AND CurX > 1 AND CurX < 13 AND _MOUSEBUTTON(1) THEN
-            TempY = CurY: TempX = CurX
-            edytor_dialog_wczytaj CurY, CurX, TempY, TempX 'okienko zapisu mapy do pliku mapa.txt
-            EXIT SUB 'zamknie menu po zakmnieciu okienka wczytywania
-         END IF
-         IF CurY = 5 AND CurX > 1 AND CurX < 13 AND _MOUSEBUTTON(1) THEN
-            TempY = CurY: TempX = CurX
-            edytor_dialog_zapisz CurY, CurX, TempY, TempX 'okienko zapisu mapy do pliku mapa.txt
-            EXIT SUB 'zamknie menu po zamknieciu okienka zapisu
-         END IF
          IF (CurX > PosX + TxtLength + 3 OR CurY = 1 OR CurY > PosY + LineCount + 1) AND (CurY <> TempY OR CurX <> TempX) AND _MOUSEBUTTON(1) THEN 'klikniecie poza menu
             TempY = CurY: TempX = CurX 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
             CLS , 0

@@ -54,7 +54,7 @@ END SUB
 '========================================================================================='
 '       PROCEDURY - EDYTOR MAP - TRYB PELNY - TABLICA ELEMENTOW DO RYSOWANIA MAPY         '
 '========================================================================================='
-SUB EditFullElems (PosX, PosY, CurX, CurY, TempX, TempY, Char$, CharColor)
+SUB EditFullElems (PosX, PosY, CurX, CurY, Char$, CharColor)
    COLOR 7, 1
    LOCATE PosY, PosX: PRINT " elementy  ";
    LOCATE PosY + 1, PosX: PRINT " torowiska ";
@@ -92,8 +92,6 @@ SUB EditFullElems (PosX, PosY, CurX, CurY, TempX, TempY, Char$, CharColor)
          COLOR 0, 3: LOCATE TableElemsY(i), TableElemsX(i): PRINT CHR$(TableElemsChar(i)); 'znak w negatywie
          IF _MOUSEBUTTON(1) THEN
             Char$ = CHR$(TableElemsChar(i)) 'klikniecie na znaku i zaladowanie go do zmiennej
-            TempY = TableElemsY(i)
-            TempX = TableElemsX(i)
          END IF
       ELSE
          COLOR 7, 1: LOCATE TableElemsY(i), TableElemsX(i): PRINT CHR$(TableElemsChar(i)); 'znak zwykly
@@ -105,12 +103,12 @@ SUB EditFullElems (PosX, PosY, CurX, CurY, TempX, TempY, Char$, CharColor)
    COLOR 15: LOCATE PosY + 10, PosX: PRINT " "; CHR$(219); CHR$(219); CHR$(219); CHR$(219); "      ";
    COLOR 14: LOCATE PosY + 10, PosX + 6: PRINT CHR$(219); CHR$(219); CHR$(219); CHR$(219);
    IF CurY = PosY + 10 AND CurX > PosX AND CurX < PosX + 5 AND _MOUSEBUTTON(1) THEN
+      Unclick
       CharColor = 15 'bialy - tor niezelektryfikowany
-      TempY = CurY: TempX = CurX 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
    END IF
    IF CurY = PosY + 10 AND CurX > PosX + 5 AND CurX < PosX + 10 AND _MOUSEBUTTON(1) THEN
+      Unclick
       CharColor = 14 'zolty - tor zelektryfikowany
-      TempY = CurY: TempX = CurX 'potrzebne do zablokowania wielokrotnego odczytu _MOUSEBUTTON
    END IF
    IF CurY = PosY + 10 AND CurX > PosX AND CurX < PosX + 5 THEN COLOR 7: LOCATE PosY + 10, PosX + 1: PRINT CHR$(219); CHR$(219); CHR$(219); CHR$(219); 'podswietlenie wskazanego
    IF CurY = PosY + 10 AND CurX > PosX + 5 AND CurX < PosX + 10 THEN COLOR 6: LOCATE PosY + 10, PosX + 6: PRINT CHR$(219); CHR$(219); CHR$(219); CHR$(219);
@@ -125,6 +123,14 @@ SUB CurCoord (CurX, CurY)
    COLOR 4, 1: LOCATE 30, 56: PRINT "wiersz="; CurY; 'OPCJA DEBUG
    LOCATE 30, 67: PRINT ", kolumna="; CurX; 'OPCJA DEBUG
 END SUB
+'====================================================================================================='
+'                                    PROCEDURY UNIWERSALNE - UNCLICK                                  '
+'====================================================================================================='
+SUB Unclick '                      \
+   DO '                              \   uzyc po kazdym _MOUSEBUTTON(1)
+      z = _MOUSEINPUT '                > wstrzymuje program do momentu zakonczenia klikniecia
+   LOOP UNTIL NOT _MOUSEBUTTON(1) '  /   zmienna "z" musi tu byc i sluzy tylko do poprawnego dzialania
+END SUB '                          /
 
 SUB etykieta_mapa_koordynaty 'PRZEROBIC NA WSPOLNA PROCEDURE DLA WSZYSTKICH ETYKIET
    DO
@@ -170,11 +176,3 @@ SUB pasek_informacyjny (pasek_informacyjny_tresc)
    'rysuj pasek
    'wpisuj tresc
 END SUB
-
-SUB spluczka 'czysci bufor myszy
-   z = 0
-   DO
-      z = z + 1
-   LOOP WHILE _MOUSEINPUT
-END SUB
-

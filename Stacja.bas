@@ -14,8 +14,10 @@ GameDir$ = ".\"
 LineCount = 80: ColumnCount = 30 'wymiary okna gry
 '''''''''''''''''''''''''''''''' deklaracje typow ''''''''''''''''''''''''''''''
 TYPE TypeMapTable 'rodzaj danych w tabeli
-   CharY AS _UNSIGNED _BYTE 'wspolrzedne znaku
-   CharX AS _UNSIGNED _BYTE
+   CharY AS SINGLE 'wspolrzedne znaku
+   CharX AS SINGLE
+   CharShiftY AS SINGLE 'umozliwia przesuniecie mapy wzgledem okna
+   CharShiftX AS SINGLE
    CharColor AS _BYTE
    CharCode AS _UNSIGNED _BYTE
 END TYPE
@@ -98,7 +100,6 @@ SUB tytul_menu_nowagra 'ekran tytulowy - submenu "Nowa gra"
 END SUB
 
 SUB tytul_menu_edytor 'ekran tytulowy - submenu "Edytor"
-   LayerNr = 1 'domyslna warstwa edytora
    DO
       Key$ = UCASE$(INKEY$)
       DO: _LIMIT 500
@@ -107,6 +108,7 @@ SUB tytul_menu_edytor 'ekran tytulowy - submenu "Edytor"
          'opcje menu i podswietlanie wskazanej
          IF CurY = 19 AND CurX > 30 AND CurX < 49 THEN 'kursor na napisie
             COLOR 7, 0: LOCATE 19, 31: PRINT "    Tryb pelny    " 'napis w negatywie
+            IF _MOUSEBUTTON(1) THEN Unclick: EditFullMap TempVar: EXIT SUB 'po zakonczeniu edytora powrot do glownego menu ekranu tytulowego
          ELSE
             COLOR 0, 7: LOCATE 19, 31: PRINT "    Tryb pelny    " 'napis zwykly
             COLOR 4: LOCATE 19, 40: PRINT "p" 'czerwona litera
@@ -124,24 +126,10 @@ SUB tytul_menu_edytor 'ekran tytulowy - submenu "Edytor"
             COLOR 4: LOCATE 23, 37: PRINT "W" 'czerwona litera
          END IF
          'zdarzenia myszy
-         IF CurY = 19 AND CurX > 30 AND CurX < 49 AND _MOUSEBUTTON(1) THEN
-            edytor_pelny_uruchamianie_warstwy LayerNr
-            EXIT SUB 'po zakonczeniu edytora powrot do glownego menu ekranu tytulowego
-         END IF
-         'IF wiersz = 21 AND kolumna > 30 AND kolumna < 49 AND _MOUSEBUTTON(1) THEN
-         '    edytor_tryb_uproszczony
-         'EXIT SUB
-         'END IF
-         IF CurY = 23 AND CurX > 30 AND CurX < 49 AND _MOUSEBUTTON(1) THEN 'wstecz
-            Unclick
-            EXIT SUB
-         END IF
+         IF CurY = 23 AND CurX > 30 AND CurX < 49 AND _MOUSEBUTTON(1) THEN Unclick: EXIT SUB 'wstecz
       LOOP WHILE _MOUSEINPUT
       'zdarzenia klawiatury
-      IF Key$ = "P" THEN
-         edytor_pelny_uruchamianie_warstwy X
-         EXIT SUB 'po zakonczeniu edytora powrot do ekranu tytulowego
-      END IF
+      IF Key$ = "P" THEN Unclick: EditFullMap TempVar: EXIT SUB
       'IF klawisz$ = "U" THEN
       '    edytor_tryb_uproszczony
       'EXIT SUB
@@ -154,7 +142,6 @@ END SUB
 '------------------------------------------------------------------------------'
 SUB gra_tryb_pelny
    gra_tryb_pelny_sprawdzanie_plikow
-   'WIDTH 80, 25 'zmiana wymiarow okna gry zaleznie od wielkosci zaladowanej mapy
    DO
       COLOR 0, 7: LOCATE 1, 1: PRINT "        Pociagi  Sklady  Rozklad  Przebiegi                                     "; 'pierwsza pozycja paska "Plik" juz przerobiona ponizej
       COLOR 4: LOCATE 1, 6: PRINT "k": LOCATE 1, 9: PRINT "P": LOCATE 1, 18: PRINT "S": LOCATE 1, 26: PRINT "R" 'czerwone litery
@@ -294,7 +281,7 @@ SUB gra_tryb_pelny_okno_pociagi
 END SUB
 
 SUB gra_tryb_pelny_mapa
-   MapPosX = 1: MapPosY = 10 'koordynaty lewego gornego rogu mapy
+   MapCurX = 1: MapCurY = 10 'koordynaty lewego gornego rogu mapy
    'zmiana wymiarow okna
    'wczytanie mapy z pliku
    OPEN "mapa.txt" FOR INPUT AS #1
@@ -302,7 +289,7 @@ SUB gra_tryb_pelny_mapa
    DO WHILE NOT EOF(1)
       '(przeniesc do taboru i elementow mapy) INPUT #1, nr_rek, klr_txt, klr_tlo, elem_map$, typ_elem$ 'nr_rekordu, kolor_tekstu, kolor_tla, element_mapy, typ_elementu (tor, semafor, rozjazd itd.)
       INPUT #1, RecNr, MapY, MapX, tresc_mapy$
-      LOCATE MapY + MapPosY - 1, MapX + MapPosX - 1: PRINT tresc_mapy$ 'rysowanie torow
+      LOCATE MapY + MapCurY - 1, MapX + MapCurX - 1: PRINT tresc_mapy$ 'rysowanie torow
       '(przeniesc do taboru i elementow mapy) COLOR klr_txt, klr_tlo: LOCATE wiersz_mapy, 1: PRINT elem_map$
    LOOP
    CLOSE #1
@@ -315,86 +302,53 @@ END SUB
 '                            EDYTOR MAP - TRYB PELNY                           '
 '------------------------------------------------------------------------------'
 '====================================================================================='
-'                         EDYTOR MAP - TRYB PELNY - WYBOR WARSTWY                     '
-'====================================================================================='
-SUB edytor_pelny_uruchamianie_warstwy (LayerNr)
-   CLS , 0
-   'AUTOMATYCZNY WYBOR WARSTWY NA PODSTAWIE ZMIENNEJ
-   IF LayerNr = 1 THEN 'mapa
-      EditFullMap (TempVar)
-   END IF
-   IF LayerNr = 2 THEN 'oznaczanie torow
-      EditFullTracks
-   END IF
-   IF LayerNr = 3 THEN 'oznaczanie rozjazdow
-      'edytor_pelny_rozjazdy
-   END IF
-   IF LayerNr = 4 THEN 'oznaczanie sygnalizatorow
-      'edytor_pelny_sygnalizatory
-   END IF
-
-   'KONIEC -  AUTOMATYCZNY WYBOR WARSTWY NA PODSTAWIE ZMIENNEJ
-   IF TempVar = 1 THEN EXIT SUB 'przy kliknieciu w menu opcji "Koniec" ustawiana jest zmienna x, ktora wychodzi z TEJ petli
-END SUB
-'====================================================================================='
 '                      EDYTOR MAP - TRYB PELNY - WARSTWA MAPY                         '
 '====================================================================================='
 'wybor edytora - nowa mapa lub istniejaca
 SUB EditFullMap (TempVar) '1. warstwa - rysowanie schematu torow
    CLS , 1
    'edytor_tryb_pelny_sprawdzanie_plikow
-   MapHeight = 25: MapWidth = 50 'domyslne wymiary nowej mapy
+   MapHeight = 25: MapWidth = 65 'domyslne wymiary nowej mapy
    CharColor = 15: BackColor = 0 'domyslne kolory: bialy i czarny
    DO
       Key$ = UCASE$(INKEY$)
       DO: _LIMIT 500
-         PosX = 1: PosY = 2 'poczatek ramki mapy
+         MapPosX = 1: MapPosY = 2 'poczatek ramki mapy
          FrameTop$ = CHR$(205): FrameBottom$ = CHR$(205): FrameSide$ = CHR$(186)
-         MapPosY = PosY + 1: MapPosX = PosX + 1 ' poczatek mapy
-         FrameDraw PosX, PosY, 23, 65, 0, 3, FrameTop$, FrameBottom$, FrameSide$ 'ramka mapy
+         MapY = MapPosY + 1: MapX = MapPosX + 1 ' poczatek mapy
+         FrameDraw MapPosX, MapPosY, MapHeight, MapWidth, 0, 3, FrameTop$, FrameBottom$, FrameSide$ 'ramka mapy
          CurCoord CurX, CurY
-         'obliczanie pozycji kursora na mapie
-         MapY = CurY - MapPosY + 1
-         MapX = CurX + MapPosX - 3
+         MapCurX = CurX + MapPosX - 2: MapCurY = CurY - MapPosY 'obliczanie pozycji kursora na mapie
          'wyswietlanie pozycji kursora na mapie
-         MapYCapped = MapY 'pokazuj rzeczywista pozycje
-         MapXCapped = MapX
-         IF MapY < 1 THEN MapYCapped = 1 'ograniczenie w sytuacji wyjechania kursorem poza mape
-         IF MapY > 25 THEN MapYCapped = 25
-         IF MapX < 1 THEN MapXCapped = 1
-         IF MapX > 68 THEN MapXCapped = 60
-         COLOR 0, 7: LOCATE 2, 3: PRINT " wiersz:   ": LOCATE 2, 11: PRINT MapYCapped;
-         LOCATE 2, 14: PRINT ", kolumna:    ": LOCATE 2, 24: PRINT MapXCapped;
+         MapCurXCapped = MapCurX: MapCurYCapped = MapCurY 'pokazuj rzeczywista pozycje
+         IF MapCurY < 1 THEN MapCurYCapped = 1 'ograniczenie w sytuacji wyjechania kursorem poza mape
+         IF MapCurY > 25 THEN MapCurYCapped = 25
+         IF MapCurX < 1 THEN MapCurXCapped = 1
+         IF MapCurX > 65 THEN MapCurXCapped = 65
+         COLOR 0, 7: LOCATE 2, 3: PRINT " wiersz:   ": LOCATE 2, 11: PRINT MapCurYCapped;
+         LOCATE 2, 14: PRINT ", kolumna:    ": LOCATE 2, 24: PRINT MapCurXCapped;
          'zdarzenia myszy
          COLOR 7, 0 'przyciski do zmiany wielkosci mapy
          LOCATE 2, 36: PRINT CHR$(17): LOCATE 2, 41: PRINT CHR$(16); 'szerokosc mapy
          LOCATE 2, 43: PRINT CHR$(31): LOCATE 2, 48: PRINT CHR$(30); 'wysokosc mapy
          'wprowadzenie wartosci liczbowych do zmiany wielkosci mapy
-         IF Y = 2 AND X = 36 AND _MOUSEBUTTON(1) THEN MapWidth = MapWidth - 1 'strzalka w lewo
-         IF Y = 2 AND X = 41 AND _MOUSEBUTTON(1) THEN MapWidth = MapWidth + 1 'strzalka w prawo
-         IF Y = 2 AND X = 43 AND _MOUSEBUTTON(1) THEN MapHeight = MapHeight - 1 'strzalka w dol
-         IF Y = 2 AND X = 48 AND _MOUSEBUTTON(1) THEN MapHeight = MapHeight + 1 'strzalka w gore
+         IF CurY = 2 AND CurX = 36 AND _MOUSEBUTTON(1) THEN MapWidth = MapWidth - 1 'strzalka w lewo
+         IF CurY = 2 AND CurX = 41 AND _MOUSEBUTTON(1) THEN MapWidth = MapWidth + 1 'strzalka w prawo
+         IF CurY = 2 AND CurX = 43 AND _MOUSEBUTTON(1) THEN MapHeight = MapHeight - 1 'strzalka w dol
+         IF CurY = 2 AND CurX = 48 AND _MOUSEBUTTON(1) THEN MapHeight = MapHeight + 1 'strzalka w gore
          COLOR 7, 0: LOCATE 2, 37: PRINT MapWidth: LOCATE 2, 44: PRINT MapHeight; 'wyswietlanie wymiarow
          'pasek menu
          COLOR 0, 7: LOCATE 1, 1: PRINT "  Plik  Warstwy  Instrukcja  Slownik                                            ";
          IF CurY = 1 AND CurX > 1 AND CurX < 8 THEN 'kursor na napisie
             COLOR 7, 0: LOCATE 1, 2: PRINT " Plik " 'napis w negatywie
-            IF _MOUSEBUTTON(1) THEN
-               Unclick
-               EditMenuFile TempVar
-               CLS , 1
-            END IF
+            IF _MOUSEBUTTON(1) THEN Unclick: EditMenuFile TempVar: CLS , 1
          ELSE
             COLOR 0, 7: LOCATE 1, 2: PRINT " Plik " 'napis zwykly
             COLOR 4: LOCATE 1, 3: PRINT "P" 'czerwona litera
          END IF
          IF CurY = 1 AND CurX > 7 AND CurX < 17 THEN 'kursor na napisie
             COLOR 7, 0: LOCATE 1, 8: PRINT " Warstwy " 'napis w negatywie
-            IF _MOUSEBUTTON(1) THEN
-               Unclick
-               EditFullMenuLayer LayerNr 'menu otwierane w edytorze w celu zmiany warstwy
-               CLS , 1
-            END IF
+            IF _MOUSEBUTTON(1) THEN Unclick: EditFullMenuLayer LayerNr: CLS , 1 'menu otwierane w edytorze w celu zmiany warstwy
          ELSE
             COLOR 0, 7: LOCATE 1, 8: PRINT " Warstwy " 'napis zwykly
             COLOR 4: LOCATE 1, 9: PRINT "W" 'czerwona litera
@@ -406,20 +360,16 @@ SUB EditFullMap (TempVar) '1. warstwa - rysowanie schematu torow
             'ramka_wiersz_poczatku, ramka_kolumna_poczatku, ramka_liczba_wierszy, ramka_dlugosc_tekstu, etykieta_wiersz_1$
             CLS , 1
          END IF
-         EditFullMapTableDisplay MapTableRecCount 'rysuje ponownie mape
+         EditFullMapTableDisplay MapTableRecCount, MapPosX, MapPosY, MapWidth, MapHeight 'rysuje ponownie mape
          PosX = 70: PosY = 2 'pozycja tablicy znakow do edycji torowiska
          EditFullElems PosX, PosY, CurX, CurY, Char$, CharColor 'wyswietlanie tablicy znakow i ladowanie znaku do zmiennej 'Char$'
-         IF CurX > 1 AND CurX < 69 AND CurY > 2 AND CurY < 26 AND _MOUSEBUTTON(1) AND Char$ <> "" THEN 'klikniecie w ramce mapy
+         IF MapCurX >= 1 AND MapCurX <= 65 AND MapCurY >= 1 AND MapCurY <= 25 AND _MOUSEBUTTON(1) AND Char$ <> "" THEN 'klikniecie w ramce mapy
             Unclick
             '1. WPISYWANIE DO TABELI
             IF Char$ <> CHR$(42) THEN 'znak nie jest *
                IF MapTableRecCount = UBOUND(MapTable) THEN 'jezeli do tabeli juz cos wpisano:
                   FOR i = 1 TO UBOUND(MapTable) 'przeszukaj tabele
-                     IF MapY = MapTable(i).CharY AND MapX = MapTable(i).CharX THEN 'jesli istnieje juz wpis o tych wspolrzednych
-                        RecNr = i
-                        EditFullMapTableDel
-                        EXIT FOR 'po jednym wykonaniu procedury usuwania opuszcza petle wyszukiwania
-                     END IF
+                     IF MapCurY = MapTable(i).CharY AND MapCurX = MapTable(i).CharX THEN RecNr = i: EditFullMapTableDel: EXIT FOR 'jesli istnieje juz wpis o tych wspolrzednych to go usun
                   NEXT i 'koniec przeszukiwania tabeli pod katem wpisu o tych samych koordynatach
                   IF UBOUND(MapTable) = 0 THEN REDIM _PRESERVE MapTable(1 TO UBOUND(MapTable) + 1) AS TypeMapTable
                   IF MapTable(1).CharY <> 0 THEN 'pierwszy wiersz tabeli nie zawiera wpisu 0,0,0,0
@@ -430,32 +380,32 @@ SUB EditFullMap (TempVar) '1. warstwa - rysowanie schematu torow
                END IF
                RecNr = UBOUND(MapTable) 'przenosi miejsce wpisania nowego rekordu na koniec tabeli
                IF ASC(Char$) <> 0 THEN
-                  MapTable(RecNr).CharY = MapY
-                  MapTable(RecNr).CharX = MapX
+                  MapTable(RecNr).CharY = MapCurY
+                  MapTable(RecNr).CharX = MapCurX
+                  MapTable(RecNr).CharShiftY = 0 'nowy znak jest widoczny na mapie
+                  MapTable(RecNr).CharShiftX = 0 'wiec ma domyslny Shift 0
                   MapTable(RecNr).CharColor = CharColor
                   MapTable(RecNr).CharCode = ASC(Char$)
                   MapTableRecCount = MapTableRecCount + 1 'aktualizuj liczbe rekordow
                END IF
-               EditFullMapTableDisplay MapTableRecCount
+               EditFullMapTableDisplay MapTableRecCount, MapPosX, MapPosY, MapWidth, MapHeight
                '2. USUWANIE Z TABELI
             ELSE 'znak jest * o wspolrzednych MapY, MapX AND liczba_rekordow_tabeli_mapy > 0   AND liczba_rekordow_tabeli_mapy = UBOUND(tabela_mapa)
                'pobranie do zmiennej RecNr numeru wpisu o wspolrzednych wiersz_mapy i kolumna_mapy
                FOR i = 1 TO UBOUND(MapTable) 'wyszkuje w tabeli rekord o podanych wspolrzednych
-                  IF MapY = MapTable(i).CharY AND MapX = MapTable(i).CharX THEN
+                  IF MapCurY = MapTable(i).CharY AND MapCurX = MapTable(i).CharX THEN
                      RecNr = i
                      EditFullMapTableDel
                      COLOR , 1: LOCATE CurY, CurX: PRINT " "; 'czysci znak z podgladu mapy
                      EXIT FOR 'po jednym wykonaniu procedury usuwania opuszcza petle wyszukiwania
                   END IF
                NEXT i
-               EditFullMapTableDisplay MapTableRecCount
+               EditFullMapTableDisplay MapTableRecCount, MapPosX, MapPosY, MapWidth, MapHeight
             END IF
-            '3. WYSWIETLANIE ZAWARTOSCI TABELI W RAMCE MAPY
-
-            '4. AUTOZAPIS TABELI DO PLIKU TYMCZASOWEGO
+            '3. AUTOZAPIS TABELI DO PLIKU TYMCZASOWEGO
             OPEN GameDir$ + "tryb pelny\Przykladowa Stacja\nowa_mapa.txt" FOR OUTPUT AS #1
             FOR RecNr = 1 TO UBOUND(MapTable)
-               WRITE #1, MapTable(RecNr).CharY, MapTable(RecNr).CharX, MapTable(RecNr).CharColor, MapTable(RecNr).CharCode
+               WRITE #1, MapTable(RecNr).CharY, MapTable(RecNr).CharX, MapTable(RecNr).CharShiftY, MapTable(RecNr).CharShiftX, MapTable(RecNr).CharColor, MapTable(RecNr).CharCode
             NEXT RecNr
             CLOSE #1
          END IF
@@ -464,10 +414,7 @@ SUB EditFullMap (TempVar) '1. warstwa - rysowanie schematu torow
       LOOP WHILE _MOUSEINPUT
       'zdarzenia klawiatury
       IF Key$ = "P" THEN EditMenuFile TempVar 'procedura menu zwraca zmienna TempVar
-      IF TempVar = 1 THEN 'przy kliknieciu w menu opcji "Koniec" ustawiana jest zmienna TempVar, ktora wychodzi z TEJ petli
-         CLS , 1
-         EXIT SUB
-      END IF
+      IF TempVar = 1 THEN CLS , 1: EXIT SUB 'przy kliknieciu w menu opcji "Koniec" ustawiana jest zmienna TempVar, ktora wychodzi z TEJ petli
       IF Key$ = "W" THEN EditFullMenuLayer LayerNr
    LOOP
 END SUB
@@ -478,14 +425,14 @@ SUB EditFullTracks '2. warstwa - oznaczanie parametrow torow na schemacie
    DO
       DO: _LIMIT 500
          PosX = 1: PosY = 2 'polozenie poczatku ramki
-         LineCount = 23: TxtLength = 65 'wymiary wnetrza ramki
+         MapHeight = 23: MapWidth = 65 'wymiary wnetrza ramki
          FrameCharColor = 0: FrameBackColor = 3 'kolory ramki
          FrameTop$ = CHR$(205): FrameBottom$ = CHR$(205): FrameSide$ = CHR$(186)
-         FrameDraw PosY, PosX, LineCount, TxtLength, FrameCharColor, FrameBackColor, FrameTop$, FrameBottom$, FrameSide$ 'ramka mapy
+         FrameDraw PosY, PosX, MapHeight, MapWidth, FrameCharColor, FrameBackColor, FrameTop$, FrameBottom$, FrameSide$ 'ramka mapy
          CurCoord CurX, CurY
          'obliczanie pozycji kursora na mapie
-         MapY = CurY - MapPosY
-         MapX = CurX + MapPosX - 3 'GDZIE JEST OBLICZANE WIERSZ/KOLUMNA_POCZATKU_MAPY?
+         MapY = CurY - MapCurY
+         MapX = CurX + MapCurX - 3
          'wyswietlanie pozycji kursora na mapie
          MapYCapped = MapY
          MapXCapped = MapX
@@ -592,30 +539,21 @@ SUB EditFullMenuLayer (TempVar) 'menu Warstwy w edytorze trybu pelnego
             COLOR 0, 7: LOCATE PosY + 5, PosX + 1: PRINT " Rozklad jazdy        " 'napis zwykly
             COLOR 4: LOCATE PosY + 5, PosX + 2: PRINT "R" 'czerwona litera
          END IF
-         IF (CurX < PosX OR CurX > PosX + TxtLength + 1 OR CurY < PosY OR CurY > PosY + LineCount + 1) AND _MOUSEBUTTON(1) THEN
-            Unclick
-            EXIT SUB 'klik poza menu
-         END IF
+         IF (CurX < PosX OR CurX > PosX + TxtLength + 1 OR CurY < PosY OR CurY > PosY + LineCount + 1) AND _MOUSEBUTTON(1) THEN Unclick: EXIT SUB 'klik poza menu
       LOOP WHILE _MOUSEINPUT
       SELECT CASE Key$ 'obsluga menu klawiszami
          CASE "S"
-            EditFullMap TempVar
-            EXIT SUB
+            EditFullMap TempVar: EXIT SUB
          CASE "O"
-            EditFullTracks
-            EXIT SUB
+            EditFullTracks: EXIT SUB
          CASE "U"
-            EditFullDevices
-            EXIT SUB
+            EditFullDevices: EXIT SUB
          CASE "P"
-            EditFullWays
-            EXIT SUB
+            EditFullWays: EXIT SUB
          CASE "R"
-            EditFullSched
-            EXIT SUB
+            EditFullSched: EXIT SUB
          CASE CHR$(27) '[Esc]
-            CLS , 0
-            EXIT SUB
+            CLS , 0: EXIT SUB
       END SELECT
    LOOP
 END SUB
@@ -651,7 +589,7 @@ SUB EditFullMapMove (CurX, CurY)
    END IF
 END SUB
 '=============================================================================='
-'             EDYTOR MAP - TRYB PELNY - PRZESUWANIE MAPY W LEWO                '
+'           EDYTOR MAP - TRYB PELNY - PRZESUWANIE SCHEMATU W LEWO              '
 '=============================================================================='
 SUB EditFullMapMoveLeft
    'IF UBOUND(MapTable) = 0 THEN pasek powiadomien "nie ma czego przesuwac"
@@ -669,25 +607,58 @@ SUB EditFullMapMoveLeft
    NEXT RecNr
    CLOSE #1
    'END IF
-   'EditFullMapTableDisplay MapTableRecCount 'odswiez widok zeby usunac stare znaki
 END SUB
 '=============================================================================='
-'             EDYTOR MAP - TRYB PELNY - PRZESUWANIE MAPY W PRAWO               '
+'           EDYTOR MAP - TRYB PELNY - PRZESUWANIE SCHEMATU W PRAWO             '
 '=============================================================================='
 SUB EditFullMapMoveRight
    'IF tabela pusta THEN pasek powiadomien "nie ma czego przesuwac"
+   'DOKLEPAC ZABIEZPIECZENIE PRZED PRZESUNIECIEM ZA DALEKO
+   FOR RecNr = 1 TO UBOUND(MapTable) '                                                   'bierze po jednym rekordzie
+      COLOR , 1: LOCATE MapTable(RecNr).CharY + 2, MapTable(RecNr).CharX + 1: PRINT " "; 'nadpisuje stary znak na mapie, +2 i +1 to offset mapy wzgledem okna
+      MapTable(RecNr).CharX = MapTable(RecNr).CharX + 1 '                                'zmienia wspolrzedna w tym rekordzie
+   NEXT RecNr
+   OPEN GameDir$ + "tryb pelny\Przykladowa Stacja\nowa_mapa.txt" FOR OUTPUT AS #1 'zapisz tabele do pliku tymczasowego
+   FOR RecNr = 1 TO UBOUND(MapTable)
+      WRITE #1, MapTable(RecNr).CharY, MapTable(RecNr).CharX, MapTable(RecNr).CharColor, MapTable(RecNr).CharCode
+   NEXT RecNr
+   CLOSE #1
 END SUB
 '=============================================================================='
-'             EDYTOR MAP - TRYB PELNY - PRZESUWANIE MAPY W GORE                '
+'           EDYTOR MAP - TRYB PELNY - PRZESUWANIE SCHEMATU W GORE              '
 '=============================================================================='
 SUB EditFullMapMoveUp
    'IF tabela pusta THEN pasek powiadomien "nie ma czego przesuwac"
+   'ELSE
+   FOR RecNr = 1 TO UBOUND(MapTable)
+      IF MapTable(RecNr).CharY = 1 THEN EXIT SUB
+   NEXT RecNr
+   FOR RecNr = 1 TO UBOUND(MapTable) '                                                   'bierze po jednym rekordzie
+      COLOR , 1: LOCATE MapTable(RecNr).CharY + 2, MapTable(RecNr).CharX + 1: PRINT " "; 'nadpisuje stary znak na mapie, +2 i +1 to offset mapy wzgledem okna
+      MapTable(RecNr).CharY = MapTable(RecNr).CharY - 1 '                                'zmienia wspolrzedna w tym rekordzie
+   NEXT RecNr
+   OPEN GameDir$ + "tryb pelny\Przykladowa Stacja\nowa_mapa.txt" FOR OUTPUT AS #1 'zapisz tabele do pliku tymczasowego
+   FOR RecNr = 1 TO UBOUND(MapTable)
+      WRITE #1, MapTable(RecNr).CharY, MapTable(RecNr).CharX, MapTable(RecNr).CharColor, MapTable(RecNr).CharCode
+   NEXT RecNr
+   CLOSE #1
+   'END IF
 END SUB
 '=============================================================================='
-'             EDYTOR MAP - TRYB PELNY - PRZESUWANIE MAPY W DOL                 '
+'            EDYTOR MAP - TRYB PELNY - PRZESUWANIE SCHEMATU W DOL              '
 '=============================================================================='
 SUB EditFullMapMoveDown
    'IF tabela pusta THEN pasek powiadomien "nie ma czego przesuwac"
+   'DOKLEPAC ZABIEZPIECZENIE PRZED PRZESUNIECIEM ZA DALEKO
+   FOR RecNr = 1 TO UBOUND(MapTable) '                                                   'bierze po jednym rekordzie
+      COLOR , 1: LOCATE MapTable(RecNr).CharY + 2, MapTable(RecNr).CharX + 1: PRINT " "; 'nadpisuje stary znak na mapie, +2 i +1 to offset mapy wzgledem okna
+      MapTable(RecNr).CharY = MapTable(RecNr).CharY + 1 '                                'zmienia wspolrzedna w tym rekordzie
+   NEXT RecNr
+   OPEN GameDir$ + "tryb pelny\Przykladowa Stacja\nowa_mapa.txt" FOR OUTPUT AS #1 'zapisz tabele do pliku tymczasowego
+   FOR RecNr = 1 TO UBOUND(MapTable)
+      WRITE #1, MapTable(RecNr).CharY, MapTable(RecNr).CharX, MapTable(RecNr).CharColor, MapTable(RecNr).CharCode
+   NEXT RecNr
+   CLOSE #1
 END SUB
 '------------------------------------------------------------------------------'
 '                        EDYTOR MAP - TRYB UPROSZCZONY                         '
@@ -697,21 +668,28 @@ END SUB
 '                                 EDYTOR TABORU                                '
 '------------------------------------------------------------------------------'
 'nic
-'------------------------------------------------------------------------------'
-'                      PROCEDURY - EDYTOR MAP - TRYB PELNY                     '
-'------------------------------------------------------------------------------'
-SUB EditFullMapTableDisplay (MapTableRecCount)
+'=============================================================================='
+'            EDYTOR MAP - TRYB PELNY - WYSWIETLANIE TABELI MAPY                '
+'=============================================================================='
+SUB EditFullMapTableDisplay (MapTableRecCount, MapPosX, MapPosY, MapWidth, MapHeight)
    IF MapTableRecCount > 0 THEN 'tylko jesli cokolwiek do niej wpisano
+      'wyswietl kazdy znak ktory miesci sie w ramce mapy:
       FOR RecNr = 1 TO UBOUND(MapTable)
-         COLOR MapTable(RecNr).CharColor, 1: LOCATE MapTable(RecNr).CharY + 2, MapTable(RecNr).CharX + 1: PRINT CHR$(MapTable(RecNr).CharCode); 'wiersz +2 i kolumna +1 to offset
+         IF MapTable(RecNr).CharX > MapPosX - 1 AND MapTable(RecNr).CharX < MapPosX + MapWidth AND MapTable(RecNr).CharY > MapPosY - 2 AND MapTable(RecNr).CharY < MapPosY + MapHeight - 1 THEN
+            COLOR MapTable(RecNr).CharColor, 1: LOCATE MapTable(RecNr).CharY + 2, MapTable(RecNr).CharX + 1: PRINT CHR$(MapTable(RecNr).CharCode) 'wiersz +2 i kolumna +1 to offset
+         END IF
       NEXT RecNr
    END IF
 END SUB
-
+'=============================================================================='
+'              EDYTOR MAP - TRYB PELNY - USUWANIE Z TABELI MAPY                '
+'=============================================================================='
 SUB EditFullMapTableDel
    'usuwanie konkretnego wpisu: za dany wpis podstawia sie ostatni
    MapTable(RecNr).CharY = MapTable(UBOUND(MapTable)).CharY
    MapTable(RecNr).CharX = MapTable(UBOUND(MapTable)).CharX
+   MapTable(RecNr).CharShiftY = MapTable(UBOUND(MapTable)).CharShiftY
+   MapTable(RecNr).CharShiftX = MapTable(UBOUND(MapTable)).CharShiftX
    MapTable(RecNr).CharColor = MapTable(UBOUND(MapTable)).CharColor
    MapTable(RecNr).CharCode = MapTable(UBOUND(MapTable)).CharCode
    'ostatni wpis teraz jest dublem wiec trzeba upierdolic tabele o ten rekord
@@ -736,76 +714,41 @@ SUB EditMenuFile (TempVar)
          'opcje menu i podswietlanie wskazanej
          IF CurY = 3 AND CurX > 1 AND CurX < 13 THEN 'kursor na napisie
             COLOR 7, 0: LOCATE 3, 2: PRINT " Nowa mapa " 'napis w negatywie
-            IF _MOUSEBUTTON(1) THEN
-               Unclick
-               edytor_dialog_nowa_mapa CurY, CurX 'okienko dialogowe do rozpoczynania nowej, czystej mapy
-               EXIT SUB 'zamknie menu po zamknieciu okienka nowej mapy
-            END IF
+            IF _MOUSEBUTTON(1) THEN Unclick: edytor_dialog_nowa_mapa CurY, CurX: EXIT SUB 'okienko dialogowe do rozpoczynania nowej, czystej mapy
          ELSE
             COLOR 0, 7: LOCATE 3, 2: PRINT " Nowa mapa " 'napis zwykly
             COLOR 4: LOCATE 3, 3: PRINT "N" 'czerwona litera
          END IF
          IF CurY = 4 AND CurX > 1 AND CurX < 13 THEN 'kursor na napisie
             COLOR 7, 0: LOCATE 4, 2: PRINT " Wczytaj   " 'napis w negatywie
-            IF _MOUSEBUTTON(1) THEN
-               Unclick
-               edytor_dialog_wczytaj CurY, CurX 'okienko zapisu mapy do pliku mapa.txt
-               EXIT SUB 'zamknie menu po zakmnieciu okienka wczytywania
-            END IF
+            IF _MOUSEBUTTON(1) THEN Unclick: edytor_dialog_wczytaj CurY, CurX: EXIT SUB 'okienko zapisu mapy do pliku mapa.txt
          ELSE
             COLOR 0, 7: LOCATE 4, 2: PRINT " Wczytaj   " 'napis zwykly
             COLOR 4: LOCATE 4, 3: PRINT "W" 'czerwona litera
          END IF
          IF CurY = 5 AND CurX > 1 AND CurX < 13 THEN 'kursor na napisie
             COLOR 7, 0: LOCATE 5, 2: PRINT " Zapisz    " 'napis w negatywie
-            IF _MOUSEBUTTON(1) THEN
-               Unclick
-               edytor_dialog_zapisz CurY, CurX 'okienko zapisu mapy do pliku mapa.txt
-               EXIT SUB 'zamknie menu po zamknieciu okienka zapisu
-            END IF
+            IF _MOUSEBUTTON(1) THEN Unclick: edytor_dialog_zapisz CurY, CurX: EXIT SUB 'okienko zapisu mapy do pliku mapa.txt
          ELSE
             COLOR 0, 7: LOCATE 5, 2: PRINT " Zapisz    " 'napis zwykly
             COLOR 4: LOCATE 5, 3: PRINT "Z" 'czerwona litera
          END IF
          IF CurY = 6 AND CurX > 1 AND CurX < 13 THEN 'kursor na napisie
             COLOR 7, 0: LOCATE 6, 2: PRINT " Koniec    " 'napis w negatywie
+            IF _MOUSEBUTTON(1) THEN Unclick: TempVar = 1: EXIT SUB 'koniec, TempVar po zakonczeniu tej procedury wyjdzie z gry do ekranu tytulowego
          ELSE
             COLOR 0, 7: LOCATE 6, 2: PRINT " Koniec    " 'napis zwykly
             COLOR 4: LOCATE 6, 3: PRINT "K" 'czerwona litera
          END IF
          'zdarzenia myszy
-         IF (CurX > PosX + TxtLength + 3 OR CurY = 1 OR CurY > PosY + LineCount + 1) AND _MOUSEBUTTON(1) THEN 'klikniecie poza menu
-            Unclick
-            CLS , 0
-            EXIT SUB
-         END IF
-         IF CurY = 6 AND CurX > 1 AND CurX < 13 AND _MOUSEBUTTON(1) THEN 'koniec
-            Unclick
-            TempVar = 1 'po zakonczeniu tej procedury wyjdzie z gry do ekranu tytulowego
-            EXIT SUB
-         END IF
+         IF (CurX > PosX + TxtLength + 3 OR CurY = 1 OR CurY > PosY + LineCount + 1) AND _MOUSEBUTTON(1) THEN Unclick: CLS , 0: EXIT SUB 'klikniecie poza menu
       LOOP WHILE _MOUSEINPUT
       'zdarzenia klawiatury
-      IF Key$ = "N" THEN
-         edytor_dialog_nowa_mapa CurX, CurY 'okienko rozpoczynania nowej, czystej mapy
-         EXIT SUB 'zamknie menu po zakmnieciu okienka nowej mapy
-      END IF
-      IF Key$ = "W" THEN
-         edytor_dialog_wczytaj CurX, CurY
-         EXIT SUB
-      END IF
-      IF Key$ = "Z" THEN
-         edytor_dialog_zapisz CurX, CurY
-         EXIT SUB
-      END IF
-      IF Key$ = "K" THEN
-         TempVar = 1 'po zakonczeniu tej procedury wyjdzie z gry do ekranu tytulowego
-         EXIT SUB
-      END IF
-      IF Key$ = CHR$(27) THEN 'Esc
-         CLS , 0
-         EXIT SUB 'zamkniecie menu
-      END IF
+      IF Key$ = "N" THEN edytor_dialog_nowa_mapa CurX, CurY: EXIT SUB 'okienko rozpoczynania nowej, czystej mapy
+      IF Key$ = "W" THEN edytor_dialog_wczytaj CurX, CurY: EXIT SUB
+      IF Key$ = "Z" THEN edytor_dialog_zapisz CurX, CurY: EXIT SUB
+      IF Key$ = "K" THEN TempVar = 1: EXIT SUB 'po zakonczeniu tej procedury wyjdzie z gry do ekranu tytulowego
+      IF Key$ = CHR$(27) THEN CLS , 0: EXIT SUB 'Esc
    LOOP
 END SUB
 
@@ -828,31 +771,21 @@ SUB edytor_dialog_nowa_mapa (CurX, CurY) 'okienko dialogowe do rozpoczynania now
          'zdarzenia myszy
          IF CurY = PosY + 4 AND CurX > PosX + 1 AND CurX < PosX + 7 THEN
             COLOR 7, 0: LOCATE PosY + 4, PosX + 2: PRINT " Tak "; 'napis w negatywie
-            IF _MOUSEBUTTON(1) THEN
-               Unclick
-               REDIM MapTable(1) AS TypeMapTable
-               MapTableRecCount = 0
-               EXIT SUB 'przewymiaruj tabele i zamknij okienko
-            END IF
+            IF _MOUSEBUTTON(1) THEN Unclick: REDIM MapTable(1) AS TypeMapTable: MapTableRecCount = 0: EXIT SUB 'przewymiaruj tabele i zamknij okienko
          END IF
          IF CurY = PosY + 4 AND CurX > PosX + 16 AND CurX < PosX + 22 THEN
             COLOR 7, 0: LOCATE PosY + 4, PosX + 17: PRINT " Nie "; 'napis w negatywie
-            IF _MOUSEBUTTON(1) THEN
-               Unclick
-               EXIT SUB
-            END IF
+            IF _MOUSEBUTTON(1) THEN Unclick: EXIT SUB
          END IF
       LOOP WHILE _MOUSEINPUT
       'zdarzenia klawiatury
-      IF Key$ = "T" OR Key$ = CHR$(13) THEN
-         REDIM MapTable(1) AS TypeMapTable: EXIT SUB 'przewymiaruj tabele bez zachowania tresci i zamknij okienko
-      END IF
+      IF Key$ = "T" OR Key$ = CHR$(13) THEN REDIM MapTable(1) AS TypeMapTable: EXIT SUB 'przewymiaruj tabele bez zachowania tresci i zamknij okienko
       IF Key$ = "N" OR Key$ = CHR$(27) THEN EXIT SUB
    LOOP
 END SUB
-'==============================================================='
-'             EDYTOR - OBA TRYBY - DIALOG WCZYTAJ               '
-'==============================================================='
+'====================================================================='
+'                EDYTOR - OBA TRYBY - DIALOG WCZYTAJ                  '
+'====================================================================='
 SUB edytor_dialog_wczytaj (CurX, CurY)
    DO
       Key$ = UCASE$(INKEY$)
@@ -879,7 +812,7 @@ SUB edytor_dialog_wczytaj (CurX, CurY)
                OPEN GameDir$ + "tryb pelny\Przykladowa Stacja\mapa.txt" FOR INPUT AS #1 'otworz plik mapa.txt i wczytaj go do tabeli
                DO WHILE NOT EOF(1)
                   IF UBOUND(MapTable) = MapTableRecCount THEN REDIM _PRESERVE MapTable(UBOUND(MapTable) + 1) AS TypeMapTable 'jesli brak pustego rekordu to dodaj go
-                  INPUT #1, MapTable(UBOUND(MapTable)).CharY, MapTable(UBOUND(MapTable)).CharX, MapTable(UBOUND(MapTable)).CharColor, MapTable(UBOUND(MapTable)).CharCode
+                  INPUT #1, MapTable(UBOUND(MapTable)).CharY, MapTable(UBOUND(MapTable)).CharX, MapTable(UBOUND(MapTable)).CharShiftY, MapTable(UBOUND(MapTable)).CharShiftX, MapTable(UBOUND(MapTable)).CharColor, MapTable(UBOUND(MapTable)).CharCode
                   MapTableRecCount = MapTableRecCount + 1
                LOOP
                CLOSE #1
@@ -888,14 +821,9 @@ SUB edytor_dialog_wczytaj (CurX, CurY)
          END IF
          IF CurY = PosY + 4 AND CurX > PosX + 16 AND CurX < PosX + 20 THEN
             COLOR 7, 0: LOCATE PosY + 4, PosX + 17: PRINT " Nie "; 'napis w negatywie
-            IF _MOUSEBUTTON(1) THEN
-               EXIT SUB
-            END IF
+            IF _MOUSEBUTTON(1) THEN Unclick: EXIT SUB
          END IF
-         IF (CurY < PosY OR CurY > PosY + LineCount + 1 OR CurX < PosX OR CurX > PosX + TxtLength + 1) AND _MOUSEBUTTON(1) THEN 'klikniecie poza ramka
-            Unclick
-            EXIT SUB
-         END IF
+         IF (CurY < PosY OR CurY > PosY + LineCount + 1 OR CurX < PosX OR CurX > PosX + TxtLength + 1) AND _MOUSEBUTTON(1) THEN Unclick: EXIT SUB 'klikniecie poza ramka
       LOOP WHILE _MOUSEINPUT
       'zdarzenia klawiatury
       IF Key$ = "T" OR Key$ = CHR$(13) THEN
@@ -904,7 +832,7 @@ SUB edytor_dialog_wczytaj (CurX, CurY)
          OPEN GameDir$ + "tryb pelny\Przykladowa Stacja\mapa.txt" FOR INPUT AS #1 'otworz plik mapa.txt i wczytaj go do tabeli
          DO WHILE NOT EOF(1)
             IF UBOUND(MapTable) = MapTableRecCount THEN REDIM MapTable(UBOUND(MapTable) + 1) AS TypeMapTable 'jesli brak pustego rekordu to dodaj go
-            INPUT #1, MapTable(UBOUND(MapTable)).CharY, MapTable(UBOUND(MapTable)).CharX, MapTable(UBOUND(MapTable)).CharColor, MapTable(UBOUND(MapTable)).CharCode
+            INPUT #1, MapTable(UBOUND(MapTable)).CharY, MapTable(UBOUND(MapTable)).CharX, MapTable(UBOUND(MapTable)).CharShiftY, MapTable(UBOUND(MapTable)).CharShiftX, MapTable(UBOUND(MapTable)).CharColor, MapTable(UBOUND(MapTable)).CharCode
             MapTableRecCount = MapTableRecCount + 1
          LOOP
          CLOSE #1
@@ -913,9 +841,9 @@ SUB edytor_dialog_wczytaj (CurX, CurY)
       IF Key$ = "N" OR Key$ = CHR$(27) THEN EXIT SUB
    LOOP
 END SUB
-'==============================================================='
-'             EDYTOR - OBA TRYBY - DIALOG ZAPISZ                '
-'==============================================================='
+'====================================================================='
+'                EDYTOR - OBA TRYBY - DIALOG ZAPISZ                   '
+'====================================================================='
 SUB edytor_dialog_zapisz (CurX, CurY)
    DO
       Key$ = UCASE$(INKEY$)
@@ -937,10 +865,9 @@ SUB edytor_dialog_zapisz (CurX, CurY)
             COLOR 7, 0: LOCATE PosY + 4, PosX + 2: PRINT " Tak "; 'napis w negatywie
             IF MapTableRecCount > 0 THEN 'wykluczenie mozliwosci zapisu pustej mapy
                IF _MOUSEBUTTON(1) THEN
-                  Unclick
-                  OPEN GameDir$ + "tryb pelny\Przykladowa Stacja\mapa.txt" FOR OUTPUT AS #1
+                  Unclick: OPEN GameDir$ + "tryb pelny\Przykladowa Stacja\mapa.txt" FOR OUTPUT AS #1
                   FOR RecNr = 1 TO UBOUND(MapTable)
-                     WRITE #1, MapTable(RecNr).CharY, MapTable(RecNr).CharX, MapTable(RecNr).CharColor, MapTable(RecNr).CharCode
+                     WRITE #1, MapTable(RecNr).CharY, MapTable(RecNr).CharX, MapTable(RecNr).CharShiftY, MapTable(RecNr).CharShiftX, MapTable(RecNr).CharColor, MapTable(RecNr).CharCode
                   NEXT RecNr
                   CLOSE #1
                   EXIT SUB
@@ -951,22 +878,16 @@ SUB edytor_dialog_zapisz (CurX, CurY)
          END IF
          IF CurY = PosY + 4 AND CurX > PosX + 14 AND CurX < PosX + 20 THEN
             COLOR 7, 0: LOCATE PosY + 4, PosX + 15: PRINT " Nie "; 'napis w negatywie
-            IF _MOUSEBUTTON(1) THEN
-               Unclick
-               EXIT SUB
-            END IF
+            IF _MOUSEBUTTON(1) THEN Unclick: EXIT SUB
          END IF
-         IF (CurY < PosY OR CurY > PosY + LineCount + 1 OR CurX < PosX OR CurX > PosX + TxtLength + 1) AND _MOUSEBUTTON(1) THEN 'klikniecie poza ramka
-            Unclick
-            EXIT SUB
-         END IF
+         IF (CurY < PosY OR CurY > PosY + LineCount + 1 OR CurX < PosX OR CurX > PosX + TxtLength + 1) AND _MOUSEBUTTON(1) THEN Unclick: EXIT SUB 'klikniecie poza ramka
       LOOP WHILE _MOUSEINPUT
       'zdarzenia klawiatury
       IF Key$ = "T" OR Key$ = CHR$(13) THEN
          IF MapTableRecCount > 0 THEN 'wykluczenie mozliwosci zapisu pustej mapy
             OPEN GameDir$ + "tryb pelny\Przykladowa Stacja\mapa.txt" FOR OUTPUT AS #1
             FOR RecNr = 1 TO UBOUND(MapTable)
-               WRITE #1, MapTable(RecNr).CharY, MapTable(RecNr).CharX, MapTable(RecNr).CharColor, MapTable(RecNr).CharCode
+               WRITE #1, MapTable(RecNr).CharY, MapTable(RecNr).CharX, MapTable(RecNr).CharShiftY, MapTable(RecNr).CharShiftX, MapTable(RecNr).CharColor, MapTable(RecNr).CharCode
             NEXT RecNr
             CLOSE #1
             EXIT SUB

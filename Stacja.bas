@@ -11,23 +11,34 @@ DIM SHARED FramePosY AS _UNSIGNED _BYTE
 _TITLE "Stacja"
 GameDir$ = ".\"
 '$EXEICON: 'iconfile.ico' 'adres i nazwa pliku otoczone pojedynczymi apostrofami
-LineCount = 80: ColumnCount = 30 'wymiary okna gry
-'''''''''''''''''''''''''''''''' deklaracje typow ''''''''''''''''''''''''''''''
-TYPE TypeMapTable 'rodzaj danych w tabeli
-   CharY AS SINGLE 'wspolrzedne znaku
+LineCount = 90: ColumnCount = 200 'wymiary okna gry
+'=============================================================================='
+'                             DEKLARACJE TYPOW                                 '
+'=============================================================================='
+TYPE TypeMapTable '                  'typ dla tabeli mapy
+   CharY AS SINGLE '                 'wspolrzedne znaku
    CharX AS SINGLE
    CharColor AS _BYTE
    CharCode AS _UNSIGNED _BYTE
 END TYPE
-'''''''''''''''''''''''''''''''' deklaracje tabel ''''''''''''''''''''''''''''''
-DIM SHARED MapTable(1) AS TypeMapTable 'tabela do przechowywania w pamieci mapy
+TYPE TypeTableElems '                'typ dla tabeli przybornika
+   TableElemsY AS SINGLE '           'polozenie znaku w przyborniku
+   TableElemsX AS SINGLE
+   TableElemsChar AS _UNSIGNED _BYTE 'kod ASCII znaku
+   TableElemsDesc AS STRING '        'opis wyswietlany przy najechaniu kursorem
+END TYPE
+'=============================================================================='
+'                              DEKLARACJE TABEL                                '
+'=============================================================================='
+DIM SHARED MapTable(1) AS TypeMapTable '    'tabela do przechowywania w pamieci mapy
+DIM SHARED TableElems(22) AS TypeTableElems 'tabela przybornika
 '------------------------------------------------------------------------------'
 '                                 EKRAN TYTULOWY                               '
 '------------------------------------------------------------------------------'
-WIDTH LineCount, ColumnCount 'wymiary okna gry
+WIDTH ColumnCount, LineCount 'wymiary okna gry
 DO
-   tytul_logo 'logo gry    'Logo
-   COLOR 4, 1: LOCATE 30, 1: PRINT "v0.1 (c) 2023�2025 Emil Sawicki";
+   tytul_logo 'logo gry
+   COLOR 4, 1: LOCATE 30, 1: PRINT "v0.1 (c) 2023ö2025 Emil Sawicki";
    Key$ = UCASE$(INKEY$)
    DO: _LIMIT 500
       CurCoord CurX, CurY
@@ -306,51 +317,38 @@ END SUB
 SUB EditFullMap (TempVar) '1. warstwa - rysowanie schematu torow
    CLS , 1
    'edytor_tryb_pelny_sprawdzanie_plikow
-   MapHeight = 25: MapWidth = 65 'domyslne wymiary nowej mapy
-   CharColor = 15: BackColor = 0 'domyslne kolory: bialy i czarny
+   MapHeight = 25: MapWidth = 65 '            'domyslne wymiary nowej mapy
+   MapPosX = 1: MapPosY = 6 '                 'poczatek ramki mapy
+   MapY = MapPosY + 1: MapX = 1 = MapPosX + 1 'poczatek mapy
+   CharColor = 15: BackColor = 0 '            'domyslne kolory: bialy i czarny
    DO
       Key$ = UCASE$(INKEY$)
       DO: _LIMIT 500
-         'CLS , 1
-         MapPosX = 1: MapPosY = 2 'poczatek ramki mapy
+         CLS , 1
          FrameTop$ = CHR$(205): FrameBottom$ = CHR$(205): FrameSide$ = CHR$(186)
-         MapY = MapPosY + 1: MapX = MapPosX + 1 ' poczatek mapy
          FrameDraw MapPosX, MapPosY, MapHeight, MapWidth, 0, 3, FrameTop$, FrameBottom$, FrameSide$ 'ramka mapy
          CurCoord CurX, CurY
          MapCurX = CurX + MapPosX - 2: MapCurY = CurY - MapPosY 'obliczanie pozycji kursora na mapie
-         'wyswietlanie pozycji kursora na mapie
-         MapCurXCapped = MapCurX: MapCurYCapped = MapCurY 'pokazuj rzeczywista pozycje
-         IF MapCurY < 1 THEN MapCurYCapped = 1 'ograniczenie w sytuacji wyjechania kursorem poza mape
+         MapCurXCapped = MapCurX: MapCurYCapped = MapCurY '     'wyswietlanie rzeczywistej pozycji kursora na mapie
+         IF MapCurY < 1 THEN MapCurYCapped = 1 '                'ograniczenie w sytuacji wyjechania kursorem poza mape
          IF MapCurY > 25 THEN MapCurYCapped = 25
          IF MapCurX < 1 THEN MapCurXCapped = 1
          IF MapCurX > 65 THEN MapCurXCapped = 65
          COLOR 0, 7: LOCATE 2, 3: PRINT " wiersz:   ": LOCATE 2, 11: PRINT MapCurYCapped;
          LOCATE 2, 14: PRINT ", kolumna:    ": LOCATE 2, 24: PRINT MapCurXCapped;
          'zdarzenia myszy
-         COLOR 7, 0 'przyciski do zmiany wielkosci mapy
-         LOCATE 2, 36: PRINT CHR$(17): LOCATE 2, 41: PRINT CHR$(16); 'szerokosc mapy
-         LOCATE 2, 43: PRINT CHR$(31): LOCATE 2, 48: PRINT CHR$(30); 'wysokosc mapy
-         'wprowadzenie wartosci liczbowych do zmiany wielkosci mapy
-         IF CurY = 2 AND CurX = 36 AND _MOUSEBUTTON(1) THEN MapWidth = MapWidth - 1 'strzalka w lewo
-         IF CurY = 2 AND CurX = 41 AND _MOUSEBUTTON(1) THEN MapWidth = MapWidth + 1 'strzalka w prawo
-         IF CurY = 2 AND CurX = 43 AND _MOUSEBUTTON(1) THEN MapHeight = MapHeight - 1 'strzalka w dol
-         IF CurY = 2 AND CurX = 48 AND _MOUSEBUTTON(1) THEN MapHeight = MapHeight + 1 'strzalka w gore
-         COLOR 7, 0: LOCATE 2, 37: PRINT MapWidth: LOCATE 2, 44: PRINT MapHeight; 'wyswietlanie wymiarow
-         'pasek menu
-         COLOR 0, 7: LOCATE 1, 1: PRINT "  Plik  Warstwy  Instrukcja  Slownik                                            ";
+         COLOR 0, 7: LOCATE 1, 1: PRINT "  Plik  Warstwy  Instrukcja  Slownik                                            "; 'PASEK MENU
          IF CurY = 1 AND CurX > 1 AND CurX < 8 THEN 'kursor na napisie
             COLOR 7, 0: LOCATE 1, 2: PRINT " Plik " 'napis w negatywie
             IF _MOUSEBUTTON(1) THEN Unclick: EditMenuFile TempVar: CLS , 1
          ELSE
-            COLOR 0, 7: LOCATE 1, 2: PRINT " Plik " 'napis zwykly
-            COLOR 4: LOCATE 1, 3: PRINT "P" 'czerwona litera
+            COLOR 0, 7: LOCATE 1, 2: PRINT " Plik ": COLOR 4: LOCATE 1, 3: PRINT "P" '  'napis z czerwonym inicjalem
          END IF
-         IF CurY = 1 AND CurX > 7 AND CurX < 17 THEN 'kursor na napisie
-            COLOR 7, 0: LOCATE 1, 8: PRINT " Warstwy " 'napis w negatywie
-            IF _MOUSEBUTTON(1) THEN Unclick: EditFullMenuLayer LayerNr: CLS , 1 'menu otwierane w edytorze w celu zmiany warstwy
+         IF CurY = 1 AND CurX > 7 AND CurX < 17 THEN '                                  'kursor na napisie
+            COLOR 7, 0: LOCATE 1, 8: PRINT " Warstwy " '                                'napis w negatywie
+            IF _MOUSEBUTTON(1) THEN Unclick: EditFullMenuLayer LayerNr: CLS , 1 '       'menu otwierane w edytorze w celu zmiany warstwy
          ELSE
-            COLOR 0, 7: LOCATE 1, 8: PRINT " Warstwy " 'napis zwykly
-            COLOR 4: LOCATE 1, 9: PRINT "W" 'czerwona litera
+            COLOR 0, 7: LOCATE 1, 8: PRINT " Warstwy ": COLOR 4: LOCATE 1, 9: PRINT "W" 'napis z czerwonym inicjalem
          END IF
          'edytor_pelny_menu_warstwa
          'okno mapy - etykieta koordynat kursora
@@ -360,8 +358,78 @@ SUB EditFullMap (TempVar) '1. warstwa - rysowanie schematu torow
             CLS , 1
          END IF
          EditFullMapTableDisplay MapTableRecCount, MapPosX, MapPosY, MapWidth, MapHeight, ShiftX, ShiftY 'rysuje ponownie mape
-         PosX = 70: PosY = 2 'pozycja tablicy znakow do edycji torowiska
-         EditFullElems PosX, PosY, CurX, CurY, Char$, CharColor 'wyswietlanie tablicy znakow i ladowanie znaku do zmiennej 'Char$'
+         PosX = 2: PosY = 2 '                                  'pozycja tablicy znakow do edycji torowiska
+         '''''''''''''''''''' POCZATEK PROCEDURY PRZYBORNIKA
+         COLOR 7, 1: LOCATE PosY, PosX: PRINT "elementy do rysowania schematu ukladu torowego";
+         TableElems(1).TableElemsY = PosY + 2: TableElems(1).TableElemsX = PosX: TableElems(1).TableElemsChar = 45: TableElems(1).TableElemsDesc$ = "tor" '-
+         TableElems(2).TableElemsY = PosY + 2: TableElems(2).TableElemsX = PosX + 3: TableElems(2).TableElemsChar = 124: TableElems(2).TableElemsDesc$ = "tor" '|
+         TableElems(3).TableElemsY = PosY + 2: TableElems(3).TableElemsX = PosX + 6: TableElems(3).TableElemsChar = 47: TableElems(3).TableElemsDesc$ = "tor" '/
+         TableElems(4).TableElemsY = PosY + 2: TableElems(4).TableElemsX = PosX + 9: TableElems(4).TableElemsChar = 92: TableElems(4).TableElemsDesc$ = "tor" '\
+         TableElems(5).TableElemsY = PosY + 2: TableElems(5).TableElemsX = PosX + 12: TableElems(5).TableElemsChar = 43: TableElems(5).TableElemsDesc$ = "skrzyzowanie torow" '+
+         TableElems(6).TableElemsY = PosY + 2: TableElems(6).TableElemsX = PosX + 15: TableElems(6).TableElemsChar = 88: TableElems(6).TableElemsDesc$ = "skrzyzowanie torow" 'X
+         TableElems(7).TableElemsY = PosY + 2: TableElems(7).TableElemsX = PosX + 18: TableElems(7).TableElemsChar = 192: TableElems(7).TableElemsDesc$ = "rozjazd na bok" 'Ŕ
+         TableElems(8).TableElemsY = PosY + 2: TableElems(8).TableElemsX = PosX + 21: TableElems(8).TableElemsChar = 191: TableElems(8).TableElemsDesc$ = "rozjazd na bok" 'ż
+         TableElems(9).TableElemsY = PosY + 2: TableElems(9).TableElemsX = PosX + 24: TableElems(9).TableElemsChar = 218: TableElems(9).TableElemsDesc$ = "rozjazd na bok" 'Ú
+         TableElems(10).TableElemsY = PosY + 2: TableElems(10).TableElemsX = PosX + 27: TableElems(10).TableElemsChar = 217: TableElems(10).TableElemsDesc$ = "rozjazd na bok" 'Ů
+         TableElems(11).TableElemsY = PosY + 2: TableElems(11).TableElemsX = PosX + 30: TableElems(11).TableElemsChar = 93: TableElems(11).TableElemsDesc$ = "uporek" ']
+         TableElems(12).TableElemsY = PosY + 2: TableElems(12).TableElemsX = PosX + 33: TableElems(12).TableElemsChar = 91: TableElems(12).TableElemsDesc$ = "uporek" '[
+         TableElems(13).TableElemsY = PosY + 2: TableElems(13).TableElemsX = PosX + 36: TableElems(13).TableElemsChar = 16: TableElems(13).TableElemsDesc$ = "semafor" '
+         TableElems(14).TableElemsY = PosY + 2: TableElems(14).TableElemsX = PosX + 39: TableElems(14).TableElemsChar = 17: TableElems(14).TableElemsDesc$ = "semafor" '
+         TableElems(15).TableElemsY = PosY + 2: TableElems(15).TableElemsX = PosX + 42: TableElems(15).TableElemsChar = 30: TableElems(15).TableElemsDesc$ = "semafor" '
+         TableElems(16).TableElemsY = PosY + 2: TableElems(16).TableElemsX = PosX + 45: TableElems(16).TableElemsChar = 31: TableElems(16).TableElemsDesc$ = "semafor" '
+         TableElems(17).TableElemsY = PosY + 2: TableElems(17).TableElemsX = PosX + 48: TableElems(17).TableElemsChar = 62: TableElems(17).TableElemsDesc$ = "tarcza manewrowa" '>
+         TableElems(18).TableElemsY = PosY + 2: TableElems(18).TableElemsX = PosX + 51: TableElems(18).TableElemsChar = 60: TableElems(18).TableElemsDesc$ = "tarcza manewrowa" '<
+         TableElems(19).TableElemsY = PosY + 2: TableElems(19).TableElemsX = PosX + 54: TableElems(19).TableElemsChar = 94: TableElems(19).TableElemsDesc$ = "tarcza manewrowa" '^
+         TableElems(20).TableElemsY = PosY + 2: TableElems(20).TableElemsX = PosX + 57: TableElems(20).TableElemsChar = 118: TableElems(20).TableElemsDesc$ = "tarcza manewrowa" 'v
+         TableElems(21).TableElemsY = PosY + 2: TableElems(21).TableElemsX = PosX + 60: TableElems(21).TableElemsChar = 127: TableElems(21).TableElemsDesc$ = "wykolejnica zamknieta" '
+         TableElems(22).TableElemsY = PosY + 2: TableElems(22).TableElemsX = PosX + 63: TableElems(22).TableElemsChar = 42: TableElems(22).TableElemsDesc$ = "kasowanie" '*
+         FOR i = 1 TO 22 ' . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  'petla obslugi przybornika
+            IF CurY > TableElems(i).TableElemsY - 2 AND CurY < TableElems(i).TableElemsY + 2 AND CurX > TableElems(i).TableElemsX - 2 AND CurX < TableElems(i).TableElemsX + 2 THEN 'kursor znajduje sie nad znakiem
+               COLOR 0, 3: LOCATE TableElems(i).TableElemsY - 1, TableElems(i).TableElemsX - 1: PRINT "   " '                                                                       'powierzchnia przycisku
+               LOCATE TableElems(i).TableElemsY, TableElems(i).TableElemsX - 1: PRINT " " + CHR$(TableElems(i).TableElemsChar) + " "; '                                             'wyswietlenie znaku w negatywie
+               LOCATE TableElems(i).TableElemsY + 1, TableElems(i).TableElemsX - 1: PRINT "   " '                                                                                   'powierzchnia przycisku
+               COLOR 11, 1: LOCATE TableElems(i).TableElemsY + 1, TableElems(i).TableElemsX + 3: PRINT TableElems(i).TableElemsDesc; '                                              'wyswietlenie etykiety z opisem
+               IF _MOUSEBUTTON(1) THEN '                                                                                                                                            'klikniecie na znaku
+                  Char$ = CHR$(TableElems(i).TableElemsChar) '                                                                                                                      'i zaladowanie go do zmiennej
+               END IF
+            ELSE '                                                                                                                                                                  'kursor poza znakiem
+               COLOR 7, 1: LOCATE TableElems(i).TableElemsY, TableElems(i).TableElemsX: PRINT CHR$(TableElems(i).TableElemsChar); '                                                 'wyswietlenie znaku zwyklego
+            END IF
+         NEXT i ' . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 'koniec petli obslugi przybornika
+         COLOR 7, 1: LOCATE PosY, PosX + 68: PRINT "elektryfikacja";
+         IF CurX > PosX + 66 AND CurX < PosX + 70 AND CurY > PosY AND CurY < PosY + 4 THEN 'kursor znajduje sie nad przyciskiem
+            COLOR , 7: LOCATE PosY + 1, PosX + 67: PRINT "   "; '                          '\
+            LOCATE PosY + 2, PosX + 67: PRINT "   "; '                                     '  > przycisk w negatywie
+            LOCATE PosY + 3, PosX + 67: PRINT "   "; '                                     '/
+            COLOR 11, 1: LOCATE PosY + 3, PosX + 71: PRINT "tor bez sieci" '               'wyswietlenie etykiety z opisem
+            IF _MOUSEBUTTON(1) THEN '                                                      'klikniecie przycisku
+               Unclick: CharColor = 15 '                                                   'ustaw bialy kolor znakow na schemacie
+            END IF
+         ELSE '                                                                            'kursor poza przyciskiem
+            COLOR 15,: LOCATE PosY + 1, PosX + 67: PRINT CHR$(219); CHR$(219); CHR$(219); ''\
+            LOCATE PosY + 2, PosX + 67: PRINT CHR$(219); CHR$(219); CHR$(219); '           '  > przycisk zwykly
+            LOCATE PosY + 3, PosX + 67: PRINT CHR$(219); CHR$(219); CHR$(219); '           '/
+         END IF
+         IF CurX > PosX + 69 AND CurX < PosX + 73 AND CurY > PosY AND CurY < PosY + 4 THEN 'kursor znajduje sie nad przyciskiem
+            COLOR , 6: LOCATE PosY + 1, PosX + 70: PRINT "   "; '                          '\
+            LOCATE PosY + 2, PosX + 70: PRINT "   "; '                                     '  > przycisk w negatywie
+            LOCATE PosY + 3, PosX + 70: PRINT "   "; '                                     '/
+            COLOR 11, 1: LOCATE PosY + 3, PosX + 71: PRINT "tor z siecia" '                'wyswietlenie etykiety z opisem
+            IF _MOUSEBUTTON(1) THEN '                                                      'klikniecie przycisku
+               Unclick: CharColor = 14 '                                                   'ustaw zolty kolor znakow na schemacie
+            END IF
+         ELSE '                                                                            'kursor poza przyciskiem
+            COLOR 14,: LOCATE PosY + 1, PosX + 70: PRINT CHR$(219); CHR$(219); CHR$(219); ''\
+            LOCATE PosY + 2, PosX + 70: PRINT CHR$(219); CHR$(219); CHR$(219); '           '  > przycisk zwykly
+            LOCATE PosY + 3, PosX + 70: PRINT CHR$(219); CHR$(219); CHR$(219); '           '/
+         END IF
+         IF CharColor = 15 THEN
+            COLOR 0, 7: LOCATE PosY + 2, PosX + 68: PRINT "X"; '                             'zaznaczenie aktywnego koloru
+         END IF
+         IF CharColor = 14 THEN
+            COLOR 0, 6: LOCATE PosY + 2, PosX + 71: PRINT "X"; '                             'zaznaczenie aktywnego koloru
+         END IF
+         ''''''''''''''''''''KONIEC PROCEDURY PRZYBORNIKA
          IF MapCurX >= 1 AND MapCurX <= 65 AND MapCurY >= 1 AND MapCurY <= 25 AND _MOUSEBUTTON(1) AND Char$ <> "" THEN 'klikniecie w ramce mapy
             Unclick
             '1. WPISYWANIE DO TABELI
@@ -377,13 +445,12 @@ SUB EditFullMap (TempVar) '1. warstwa - rysowanie schematu torow
                      RecNr = UBOUND(MapTable) 'pierwszy rekord zawiera zera wiec nadpisac go
                   END IF
                END IF
-               RecNr = UBOUND(MapTable) 'przenosi miejsce wpisania nowego rekordu na koniec tabeli
-               IF ASC(Char$) <> 0 THEN
-                  MapTable(RecNr).CharY = MapCurY
-                  MapTable(RecNr).CharX = MapCurX
-                  MapTable(RecNr).CharColor = CharColor
-                  MapTable(RecNr).CharCode = ASC(Char$)
-                  MapTableRecCount = MapTableRecCount + 1 'aktualizuj liczbe rekordow
+               RecNr = UBOUND(MapTable) '                                          'przenosi miejsce wpisania nowego rekordu na koniec tabeli
+               IF ASC(Char$) <> 0 THEN '                                           'zapobiega utworzeniu pustego rekordu
+                  MapTable(RecNr).CharY = MapCurY: MapTable(RecNr).CharX = MapCurX 'zapisuje do tabeli polozenie kursora na mapie
+                  MapTable(RecNr).CharColor = CharColor '                          'DODAC KOLOR TLA ZNAKU : MapTable(RecNr).CharBack = CharBack
+                  MapTable(RecNr).CharCode = ASC(Char$) '                          'zapisuje do tabeli kod ASCII znaku
+                  MapTableRecCount = MapTableRecCount + 1 '                        'aktualizuje licznik rekordow
                END IF
                EditFullMapTableDisplay MapTableRecCount, MapPosX, MapPosY, MapWidth, MapHeight, ShiftX, ShiftY
                '2. USUWANIE Z TABELI
@@ -406,7 +473,7 @@ SUB EditFullMap (TempVar) '1. warstwa - rysowanie schematu torow
             NEXT RecNr
             CLOSE #1
          END IF
-         EditFullMapMove CurX, CurY, MapPosX, MapPosY, MapHeight, MapWidth, ShiftX, ShiftY 'przesuwanie mapy
+         EditFullMapMove CurX, CurY, MapPosX, MapPosY, MapHeight, MapWidth 'przesuwanie mapy
          'pasek_informacyjny pasek_informacyjny_tresc
       LOOP WHILE _MOUSEINPUT
       'zdarzenia klawiatury
@@ -557,14 +624,14 @@ END SUB
 '=============================================================================='
 '                 EDYTOR MAP - TRYB PELNY - PRZESUWANIE MAPY                   '
 '=============================================================================='
-SUB EditFullMapMove (CurX, CurY, MapPosX, MapPosY, MapHeight, MapWidth, ShiftX, ShiftY)
+SUB EditFullMapMove (CurX, CurY, MapPosX, MapPosY, MapHeight, MapWidth)
    COLOR 7, 1: LOCATE 14, 70: PRINT "przesuwanie";
    COLOR 7, 1: LOCATE 15, 71: PRINT "mapy";
    IF CurX = 71 AND CurY = 16 THEN ' . . . . . . . . . . . . LEFT. . . . . . . . . . . . . . . . . . . . 'kursor nad przyciskiem
       COLOR 0, 3: LOCATE 16, 71: PRINT CHR$(17); '                                                       'strzalka w negatywie
       IF _MOUSEBUTTON(1) THEN
          IF UBOUND(MapTable) > 0 THEN '                                                                  'jesli tabela nie jest pusta
-            Unclick: EditFullMapMoveLeft MapPosX, MapPosY, MapHeight, MapWidth, ShiftX, ShiftY '         'procedura przesuwania mapy
+            Unclick: EditFullMapMoveLeft MapPosX, MapPosY, MapHeight, MapWidth '                         'wywolaj procedure przesuwania mapy
          ELSE
             COLOR 7, 14: LOCATE 25, 30: PRINT "nie ma czego przesuwac" '                                 'pasek powiadomien
          END IF
@@ -576,7 +643,7 @@ SUB EditFullMapMove (CurX, CurY, MapPosX, MapPosY, MapHeight, MapWidth, ShiftX, 
       COLOR 0, 3: LOCATE 16, 73: PRINT CHR$(16); '                                                       'strzalka w negatywie
       IF _MOUSEBUTTON(1) THEN
          IF UBOUND(MapTable) > 0 THEN '                                                                  'jesli tabela nie jest pusta
-            Unclick: EditFullMapMoveRight MapPosX, MapPosY, MapHeight, MapWidth, ShiftX, ShiftY '        'procedura przesuwania mapy
+            Unclick: EditFullMapMoveRight MapPosX, MapPosY, MapHeight, MapWidth '                        'wywolaj procedure przesuwania mapy
          ELSE
             COLOR 7, 14: LOCATE 25, 30: PRINT "nie ma czego przesuwac" '                                 'pasek powiadomien
          END IF
@@ -588,7 +655,7 @@ SUB EditFullMapMove (CurX, CurY, MapPosX, MapPosY, MapHeight, MapWidth, ShiftX, 
       COLOR 0, 3: LOCATE 16, 75: PRINT CHR$(30); '                                                       'strzalka w negatywie
       IF _MOUSEBUTTON(1) THEN
          IF UBOUND(MapTable) > 0 THEN '                                                                  'jesli tabela nie jest pusta
-            Unclick: EditFullMapMoveUp MapPosX, MapPosY, MapHeight, MapWidth, ShiftX, ShiftY '           'procedura przesuwania mapy
+            Unclick: EditFullMapMoveUp MapPosX, MapPosY, MapHeight, MapWidth '                           'wywolaj procedure przesuwania mapy
          ELSE
             COLOR 7, 14: LOCATE 25, 30: PRINT "nie ma czego przesuwac" '                                 'pasek powiadomien
          END IF
@@ -600,9 +667,9 @@ SUB EditFullMapMove (CurX, CurY, MapPosX, MapPosY, MapHeight, MapWidth, ShiftX, 
       COLOR 0, 3: LOCATE 16, 77: PRINT CHR$(31); '                                                       'strzalka w negatywie
       IF _MOUSEBUTTON(1) THEN
          IF UBOUND(MapTable) > 0 THEN '                                                                  'jesli tabela nie jest pusta
-            Unclick: EditFullMapMoveDown MapPosX, MapPosY, MapHeight, MapWidth, ShiftX, ShiftY '         'procedura przesuwania mapy
+            Unclick: EditFullMapMoveDown MapPosX, MapPosY, MapHeight, MapWidth '                         'wywolaj procedure przesuwania mapy
          ELSE
-            COLOR 7, 14: LOCATE 25, 30: PRINT "nie ma czego przesuwac" '                                    'pasek powiadomien
+            COLOR 7, 14: LOCATE 25, 30: PRINT "nie ma czego przesuwac" '                                 'pasek powiadomien
          END IF
       END IF
    ELSE '                                                                                                'kursor poza przyciskiem
@@ -612,10 +679,10 @@ END SUB
 '=============================================================================='
 '              EDYTOR MAP - TRYB PELNY - PRZESUWANIE MAPY W LEWO               '
 '=============================================================================='
-SUB EditFullMapMoveLeft (MapPosX, MapPosY, MapHeight, MapWidth, ShiftX, ShiftY)
+SUB EditFullMapMoveLeft (MapPosX, MapPosY, MapHeight, MapWidth)
    FOR RecNr = 1 TO UBOUND(MapTable) '                                                                            'bierze po jednym rekordzie
       IF MapTable(RecNr).CharX > MapPosX AND MapTable(RecNr).CharX < MapPosX + MapWidth AND MapTable(RecNr).CharY > MapPosY AND MapTable(RecNr).CharY < MapPosY + MapHeight THEN 'uniemozliwia nadpisanie znaku poza ramka mapy
-         COLOR , 1: LOCATE MapTable(RecNr).CharY + 2, MapTable(RecNr).CharX + 1: PRINT " " '                      'nadpisuje stary znak na mapie, +2 i +1 to offset mapy wzgledem okna
+         COLOR , 1: LOCATE MapTable(RecNr).CharY + MapPosY, MapTable(RecNr).CharX + MapPosX: PRINT " " '                      'nadpisuje stary znak na mapie, +2 i +1 to offset mapy wzgledem okna
       END IF
       MapTable(RecNr).CharX = MapTable(RecNr).CharX - 1 '                                                         'zmienia wspolrzedna w tym rekordzie
    NEXT RecNr
@@ -628,10 +695,10 @@ END SUB
 '=============================================================================='
 '             EDYTOR MAP - TRYB PELNY - PRZESUWANIE MAPY W PRAWO               '
 '=============================================================================='
-SUB EditFullMapMoveRight (MapPosX, MapPosY, MapHeight, MapWidth, ShiftX, ShiftY)
+SUB EditFullMapMoveRight (MapPosX, MapPosY, MapHeight, MapWidth)
    FOR RecNr = 1 TO UBOUND(MapTable) '                                                                            'bierze po jednym rekordzie
       IF MapTable(RecNr).CharX > MapPosX AND MapTable(RecNr).CharX < MapPosX + MapWidth AND MapTable(RecNr).CharY > MapPosY AND MapTable(RecNr).CharY < MapPosY + MapHeight THEN 'uniemozliwia nadpisanie znaku poza ramka mapy
-         COLOR , 1: LOCATE MapTable(RecNr).CharY + 2, MapTable(RecNr).CharX + 1: PRINT " " '                      'nadpisuje stary znak na mapie, +2 i +1 to offset mapy wzgledem okna
+         COLOR , 1: LOCATE MapTable(RecNr).CharY + MaPosY, MapTable(RecNr).CharX + MapPosX: PRINT " " '                      'nadpisuje stary znak na mapie, +2 i +1 to offset mapy wzgledem okna
       END IF
       MapTable(RecNr).CharX = MapTable(RecNr).CharX + 1 '                                                         'zmienia wspolrzedna w tym rekordzie
    NEXT RecNr
@@ -644,10 +711,10 @@ END SUB
 '=============================================================================='
 '              EDYTOR MAP - TRYB PELNY - PRZESUWANIE MAPY W GORE               '
 '=============================================================================='
-SUB EditFullMapMoveUp (MapPosX, MapPosY, MapHeight, MapWidth, ShiftX, ShiftY)
+SUB EditFullMapMoveUp (MapPosX, MapPosY, MapHeight, MapWidth)
    FOR RecNr = 1 TO UBOUND(MapTable) '                                                                            'bierze po jednym rekordzie
       IF MapTable(RecNr).CharX > MapPosX AND MapTable(RecNr).CharX < MapPosX + MapWidth AND MapTable(RecNr).CharY > MapPosY AND MapTable(RecNr).CharY < MapPosY + MapHeight THEN 'uniemozliwia nadpisanie znaku poza ramka mapy
-         COLOR , 1: LOCATE MapTable(RecNr).CharY + 2, MapTable(RecNr).CharX + 1: PRINT " " '                      'nadpisuje stary znak na mapie, +2 i +1 to offset mapy wzgledem okna
+         COLOR , 1: LOCATE MapTable(RecNr).CharY + MapPosY, MapTable(RecNr).CharX + MapPosX: PRINT " " '                      'nadpisuje stary znak na mapie, +2 i +1 to offset mapy wzgledem okna
       END IF
       MapTable(RecNr).CharY = MapTable(RecNr).CharY - 1 '                                                         'zmienia wspolrzedna w tym rekordzie
    NEXT RecNr
@@ -660,10 +727,10 @@ END SUB
 '=============================================================================='
 '               EDYTOR MAP - TRYB PELNY - PRZESUWANIE MAPY W DOL               '
 '=============================================================================='
-SUB EditFullMapMoveDown (MapPosX, MapPosY, MapHeight, MapWidth, ShiftX, ShiftY)
+SUB EditFullMapMoveDown (MapPosX, MapPosY, MapHeight, MapWidth)
    FOR RecNr = 1 TO UBOUND(MapTable) '                                                                            'bierze po jednym rekordzie
       IF MapTable(RecNr).CharX > MapPosX AND MapTable(RecNr).CharX < MapPosX + MapWidth AND MapTable(RecNr).CharY > MapPosY AND MapTable(RecNr).CharY < MapPosY + MapHeight THEN 'uniemozliwia nadpisanie znaku poza ramka mapy
-         COLOR , 1: LOCATE MapTable(RecNr).CharY + 2, MapTable(RecNr).CharX + 1: PRINT " " '                      'nadpisuje stary znak na mapie, +2 i +1 to offset mapy wzgledem okna
+         COLOR , 1: LOCATE MapTable(RecNr).CharY + MapPosY, MapTable(RecNr).CharX + MapPosX: PRINT " " '                      'nadpisuje stary znak na mapie, +2 i +1 to offset mapy wzgledem okna
       END IF
       MapTable(RecNr).CharY = MapTable(RecNr).CharY + 1 '                                                         'zmienia wspolrzedna w tym rekordzie
    NEXT RecNr

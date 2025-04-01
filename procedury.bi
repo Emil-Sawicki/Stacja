@@ -1,7 +1,6 @@
-'------------------------------------------------------------------------------'
-'                              EKRAN TYTULOWY                                  '
-'------------------------------------------------------------------------------'
-
+'=============================================================================='
+'                               EKRAN TYTULOWY                                 '
+'=============================================================================='
 SUB tytul_logo
    COLOR 0, 2: LOCATE 1, 1
    PRINT "                                                                                "
@@ -20,7 +19,9 @@ SUB tytul_logo
    PRINT "                    symulator prowadzenia ruchu pociagow                        "
    PRINT "                                                                                "
 END SUB
-
+'=============================================================================='
+'                                MENU GLOWNE                                   '
+'=============================================================================='
 SUB TitleMenu (CurX, CurY)
    IF CurY = 17 AND CurX > 30 AND CurX < 49 THEN 'kursor na napisie
       COLOR 7, 0: LOCATE 17, 31: PRINT "     Nowa gra     " 'napis w negatywie
@@ -47,74 +48,12 @@ SUB TitleMenu (CurX, CurY)
       COLOR 4: LOCATE 23, 37: PRINT "K" 'czerwona litera
    END IF
 END SUB
-
-'====================================================================================='
-'             PROCEDURY - EDYTOR MAP - TRYB PELNY - WARSTWA SCHEMATU TOROW            '
-'====================================================================================='
 '========================================================================================='
-'       PROCEDURY - EDYTOR MAP - TRYB PELNY - TABLICA ELEMENTOW DO RYSOWANIA MAPY         '
+'               PROCEDURY - EDYTOR MAP - TRYB PELNY - WARSTWA SCHEMATU TOROW              '
 '========================================================================================='
-SUB EditFullElems (PosX, PosY, CurX, CurY, Char$, CharColor)
-   COLOR 7, 1
-   LOCATE PosY, PosX: PRINT " elementy  ";
-   LOCATE PosY + 1, PosX: PRINT " torowiska ";
-   LOCATE PosY + 2, PosX: PRINT "           "; 'proste tory
-   LOCATE PosY + 3, PosX: PRINT "           "; 'rozjazdy
-   LOCATE PosY + 4, PosX: PRINT "           "; 'uporki
-   LOCATE PosY + 5, PosX: PRINT "           "; 'wykolejnica i tarcze manewrowe
-   LOCATE PosY + 6, PosX: PRINT "           "; 'semafory
-   LOCATE PosY + 7, PosX: PRINT "           ";
-   'DOKLEPAC WYBOR ELEMENTU KLAWISZEM + OPIS SKROTU W RAMCE
-   DIM TableElemsY(20), TableElemsX(20), TableElemsChar(20) 'tabela znakow do uzytku w edytorze
-   'umieszczenie znakow w tabeli - do rekordu o numerze (i) laduje kod znaku i jego polozenie na ekranie
-   TableElemsY(1) = PosY + 2: TableElemsX(1) = PosX + 2: TableElemsChar(1) = 45 '-
-   TableElemsY(2) = PosY + 2: TableElemsX(2) = PosX + 4: TableElemsChar(2) = 47 '/
-   TableElemsY(3) = PosY + 2: TableElemsX(3) = PosX + 6: TableElemsChar(3) = 124 '|
-   TableElemsY(4) = PosY + 2: TableElemsX(4) = PosX + 8: TableElemsChar(4) = 92 '\
-   TableElemsY(5) = PosY + 3: TableElemsX(5) = PosX + 2: TableElemsChar(5) = 192 'À
-   TableElemsY(6) = PosY + 3: TableElemsX(6) = PosX + 4: TableElemsChar(6) = 191 '¿
-   TableElemsY(7) = PosY + 3: TableElemsX(7) = PosX + 6: TableElemsChar(7) = 218 'Ú
-   TableElemsY(8) = PosY + 3: TableElemsX(8) = PosX + 8: TableElemsChar(8) = 217 'Ù
-   TableElemsY(9) = PosY + 4: TableElemsX(9) = PosX + 2: TableElemsChar(9) = 93 ']
-   TableElemsY(10) = PosY + 4: TableElemsX(10) = PosX + 4: TableElemsChar(10) = 91 '[
-   TableElemsY(11) = PosY + 4: TableElemsX(11) = PosX + 6: TableElemsChar(11) = 127 ' granica przetaczania
-   TableElemsY(12) = PosY + 4: TableElemsX(12) = PosX + 8: TableElemsChar(12) = 88 'X skrzyzowanie torow
-   TableElemsY(13) = PosY + 5: TableElemsX(13) = PosX + 2: TableElemsChar(13) = 94 '^ wykolejnica
-   TableElemsY(14) = PosY + 5: TableElemsX(14) = PosX + 4: TableElemsChar(14) = 60 '<
-   TableElemsY(15) = PosY + 5: TableElemsX(15) = PosX + 6: TableElemsChar(15) = 62 '>
-   TableElemsY(16) = PosY + 5: TableElemsX(16) = PosX + 8: TableElemsChar(16) = 42 '* kasowanie
-   TableElemsY(17) = PosY + 6: TableElemsX(17) = PosX + 2: TableElemsChar(17) = 16 '
-   TableElemsY(18) = PosY + 6: TableElemsX(18) = PosX + 4: TableElemsChar(18) = 17 '
-   TableElemsY(19) = PosY + 6: TableElemsX(19) = PosX + 6: TableElemsChar(19) = 30 '
-   TableElemsY(20) = PosY + 6: TableElemsX(20) = PosX + 8: TableElemsChar(20) = 31 '
-   FOR i = 1 TO 20
-      IF CurY = TableElemsY(i) AND CurX = TableElemsX(i) THEN 'kursor na znaku
-         COLOR 0, 3: LOCATE TableElemsY(i), TableElemsX(i): PRINT CHR$(TableElemsChar(i)); 'znak w negatywie
-         IF _MOUSEBUTTON(1) THEN
-            Char$ = CHR$(TableElemsChar(i)) 'klikniecie na znaku i zaladowanie go do zmiennej
-         END IF
-      ELSE
-         COLOR 7, 1: LOCATE TableElemsY(i), TableElemsX(i): PRINT CHR$(TableElemsChar(i)); 'znak zwykly
-      END IF
-   NEXT i
-   COLOR 7, 1
-   LOCATE PosY + 8, PosX: PRINT "  kolor    ";
-   LOCATE PosY + 9, PosX: PRINT " elementu  ";
-   COLOR 15: LOCATE PosY + 10, PosX: PRINT " "; CHR$(219); CHR$(219); CHR$(219); CHR$(219); "      ";
-   COLOR 14: LOCATE PosY + 10, PosX + 6: PRINT CHR$(219); CHR$(219); CHR$(219); CHR$(219);
-   IF CurY = PosY + 10 AND CurX > PosX AND CurX < PosX + 5 AND _MOUSEBUTTON(1) THEN
-      Unclick
-      CharColor = 15 'bialy - tor niezelektryfikowany
-   END IF
-   IF CurY = PosY + 10 AND CurX > PosX + 5 AND CurX < PosX + 10 AND _MOUSEBUTTON(1) THEN
-      Unclick
-      CharColor = 14 'zolty - tor zelektryfikowany
-   END IF
-   IF CurY = PosY + 10 AND CurX > PosX AND CurX < PosX + 5 THEN COLOR 7: LOCATE PosY + 10, PosX + 1: PRINT CHR$(219); CHR$(219); CHR$(219); CHR$(219); 'podswietlenie wskazanego
-   IF CurY = PosY + 10 AND CurX > PosX + 5 AND CurX < PosX + 10 THEN COLOR 6: LOCATE PosY + 10, PosX + 6: PRINT CHR$(219); CHR$(219); CHR$(219); CHR$(219);
-   IF CharColor = 15 THEN COLOR 0, 7: LOCATE PosY + 10, PosX + 1: PRINT "[": LOCATE PosY + 10, PosX + 4: PRINT "]"; 'zaznaczenie aktywnego
-   IF CharColor = 14 THEN COLOR 0, 6: LOCATE PosY + 10, PosX + 6: PRINT "[": LOCATE PosY + 10, PosX + 9: PRINT "]";
-END SUB
+'========================================================================================='
+'                     PROCEDURY - EDYTOR MAP - TRYB PELNY - PRZYBORNIK                    '
+'========================================================================================='
 '------------------------------------------------------------------------------'
 '                             PROCEDURY UNIWERSALNE                            '
 '------------------------------------------------------------------------------'
